@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión de Calidad — Procesos de Negocio | Odoo 17 Enterprise</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--border:#21262d;--text:#e6edf3;--muted:#8b949e;--white:#fff;
+  --pro:#8b5cf6;--cal:#22c55e;--pla:#3b82f6;--dep:#eab308;--sis:#6366f1;--ing:#f97316;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);font-family:'IBM Plex Sans',sans-serif;color:var(--text);padding:20px 16px 60px;
+  background-image:
+    radial-gradient(ellipse at 10% 5%,rgba(139,92,246,.10) 0%,transparent 40%),
+    radial-gradient(ellipse at 90% 15%,rgba(34,197,94,.07) 0%,transparent 40%),
+    radial-gradient(ellipse at 50% 90%,rgba(234,179,8,.05) 0%,transparent 50%),
+    radial-gradient(ellipse at 75% 55%,rgba(99,102,241,.04) 0%,transparent 40%);
+  min-height:100vh;
+}
+
+.routebar{max-width:1700px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.routebar-left{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px}
+.routebar a{color:var(--pro);text-decoration:none;border:1px solid rgba(139,92,246,.4);padding:4px 10px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:11px;transition:all .15s}
+.routebar a:hover{background:rgba(139,92,246,.1);border-color:var(--pro)}
+.routebar-right{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);opacity:.7}
+.crumb-sep{color:var(--muted);opacity:.4}
+.crumb-active{color:var(--pro);font-weight:600}
+
+header.page{text-align:center;margin-bottom:24px;max-width:1700px;margin-left:auto;margin-right:auto}
+.badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--pro);border:1px solid var(--pro);padding:3px 12px;border-radius:2px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.version-badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);border:1px solid var(--border);padding:2px 8px;border-radius:2px;letter-spacing:1px;margin-left:8px;vertical-align:middle}
+header.page h1{font-size:clamp(18px,3vw,30px);font-weight:700;color:var(--white)}
+header.page h1 span.pro{color:var(--pro)}
+header.page h1 span.cal{color:var(--cal)}
+header.page p{color:var(--muted);font-size:13px;margin-top:6px;font-family:'IBM Plex Mono',monospace}
+
+.legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:0 auto 22px;max-width:1100px}
+.legend-item{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+.intro-note{
+  max-width:900px;margin:0 auto 22px;
+  border:1px solid rgba(139,92,246,.30);background:rgba(139,92,246,.06);
+  border-radius:8px;padding:11px 16px;
+  font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;line-height:1.7;
+}
+.intro-note strong{color:var(--pro)}
+.arch-note{
+  max-width:900px;margin:0 auto 24px;
+  border:1px solid rgba(234,179,8,.35);background:rgba(234,179,8,.07);
+  border-radius:8px;padding:11px 16px;
+  font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;line-height:1.7;
+}
+.arch-note strong{color:var(--dep)}
+
+.overview-wrap{max-width:1700px;margin:0 auto}
+.section-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:3px;margin:28px 0 14px;text-align:center}
+
+.macro-flow{
+  display:flex;align-items:stretch;justify-content:center;gap:6px;flex-wrap:wrap;
+  max-width:1700px;margin:0 auto 20px;padding:18px 14px;
+  border:1px solid var(--border);background:var(--surface);border-radius:12px;
+}
+.macro-step{
+  position:relative;flex:1;min-width:120px;max-width:180px;
+  padding:11px 10px;border:1px solid;border-radius:8px;
+  cursor:pointer;transition:all .2s;text-decoration:none;color:inherit;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.macro-step:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.macro-step.pm{border-color:rgba(139,92,246,.5);background:rgba(139,92,246,.07)}
+.macro-step.pm:hover{background:rgba(139,92,246,.14);border-color:var(--pro)}
+.macro-step.ps{border-color:rgba(99,102,241,.5);background:rgba(99,102,241,.07)}
+.macro-step.ps:hover{background:rgba(99,102,241,.14);border-color:var(--sis)}
+.macro-step.po{border-color:rgba(234,179,8,.5);background:rgba(234,179,8,.07)}
+.macro-step.po:hover{background:rgba(234,179,8,.14);border-color:var(--dep)}
+.macro-step.cm{border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.07)}
+.macro-step.cm:hover{background:rgba(34,197,94,.14);border-color:var(--cal)}
+
+.macro-code{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1.5px;margin-bottom:5px}
+.macro-step.pm .macro-code{color:var(--pro)}
+.macro-step.ps .macro-code{color:var(--sis)}
+.macro-step.po .macro-code{color:var(--dep)}
+.macro-step.cm .macro-code{color:var(--cal)}
+.macro-name{font-size:11px;font-weight:700;color:var(--white);line-height:1.3}
+.macro-hint{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);margin-top:6px;opacity:.75}
+.macro-arrow{display:flex;align-items:center;color:var(--muted);font-size:16px;opacity:.5;user-select:none}
+
+.part-divider{
+  max-width:1700px;margin:24px auto 10px;text-align:center;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+}
+.part-divider.part-pro{color:var(--pro);border-color:rgba(139,92,246,.3)}
+.part-divider.part-cal{color:var(--cal);border-color:rgba(34,197,94,.3)}
+
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;max-width:1700px;margin:0 auto}
+.pcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 16px 14px;cursor:pointer;text-decoration:none;color:inherit;transition:all .2s;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.pcard::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%}
+.pcard.pm::before{background:var(--pro)}
+.pcard.ps::before{background:var(--sis)}
+.pcard.po::before{background:var(--dep)}
+.pcard.cm::before{background:var(--cal)}
+.pcard:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.pcard.pm:hover{border-color:var(--pro)}
+.pcard.ps:hover{border-color:var(--sis)}
+.pcard.po:hover{border-color:var(--dep)}
+.pcard.cm:hover{border-color:var(--cal)}
+
+.pcard-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;padding-left:8px}
+.pcard-code{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:1.5px}
+.pcard.pm .pcard-code{color:var(--pro)}
+.pcard.ps .pcard-code{color:var(--sis)}
+.pcard.po .pcard-code{color:var(--dep)}
+.pcard.cm .pcard-code{color:var(--cal)}
+.pcard-type{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);padding:1px 6px;border-radius:2px;border:1px solid var(--border);text-transform:uppercase;letter-spacing:1px}
+.pcard-title{font-size:14px;font-weight:700;color:var(--white);margin-bottom:10px;line-height:1.35;padding-left:8px}
+.pcard-desc{font-size:11.5px;color:var(--muted);line-height:1.55;margin-bottom:12px;padding-left:8px;flex:1}
+.pcard-desc em{color:var(--text);font-style:normal;font-weight:600}
+
+.pcard-io{padding:8px 8px 0;border-top:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.6}
+.io-row{display:flex;gap:6px;margin-bottom:3px;align-items:flex-start}
+.io-label{color:var(--pro);font-weight:600;flex-shrink:0;min-width:26px}
+.io-label.out{color:var(--dep)}
+.io-text{color:var(--muted)}
+
+.pcard-meta{display:flex;flex-wrap:wrap;gap:8px;padding:8px 8px 0;border-top:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.meta-group{display:flex;align-items:center;gap:6px}
+.meta-label{opacity:.65}
+.meta-value{color:var(--text);font-weight:600}
+
+.pcard-lanes{display:flex;gap:4px;padding:8px 8px 0;flex-wrap:wrap}
+.lane-chip{display:inline-flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;padding:2px 6px;border-radius:2px;border:1px solid}
+.lane-chip.pro{color:var(--pro);border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.08)}
+.lane-chip.cal{color:var(--cal);border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.08)}
+.lane-chip.pla{color:var(--pla);border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.08)}
+.lane-chip.dep{color:var(--dep);border-color:rgba(234,179,8,.4);background:rgba(234,179,8,.08)}
+.lane-chip.sis{color:var(--sis);border-color:rgba(99,102,241,.4);background:rgba(99,102,241,.08)}
+.lane-chip.ing{color:var(--ing);border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.08)}
+
+.pcard-cta{margin-top:10px;padding:0 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px}
+.pcard.pm .pcard-cta{color:var(--pro)}
+.pcard.ps .pcard-cta{color:var(--sis)}
+.pcard.po .pcard-cta{color:var(--dep)}
+.pcard.cm .pcard-cta{color:var(--cal)}
+
+/* PROCESS DIAGRAM */
+.diagram{max-width:1700px;margin:0 auto;overflow-x:auto}
+.diagram-rel{position:relative}
+.sw{display:grid;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+
+.hdr{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 3px;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid;text-align:center;line-height:1.3}
+.hdr-corner{background:var(--surface);border-bottom:2px solid var(--border);border-right:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.hdr-pro{background:rgba(139,92,246,.12);color:var(--pro);border-color:var(--pro);border-right:1px solid var(--border)}
+.hdr-cal{background:rgba(34,197,94,.10); color:var(--cal); border-color:var(--cal); border-right:1px solid var(--border)}
+.hdr-pla{background:rgba(59,130,246,.12);color:var(--pla); border-color:var(--pla); border-right:1px solid var(--border)}
+.hdr-dep{background:rgba(234,179,8,.10); color:var(--dep); border-color:var(--dep); border-right:1px solid var(--border)}
+.hdr-sis{background:rgba(99,102,241,.12);color:var(--sis); border-color:var(--sis); border-right:1px solid var(--border)}
+.hdr-ing{background:rgba(249,115,22,.12);color:var(--ing); border-color:var(--ing); border-right:1px solid var(--border)}
+.hdr-last{border-right:none}
+
+.sl{background:var(--surface);border-right:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 3px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);line-height:1.4}
+.sl strong{font-size:15px;font-weight:700;display:block;margin-bottom:2px}
+
+.lc{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:10px 7px;display:flex;align-items:center;justify-content:center;min-height:115px;flex-direction:column;gap:6px}
+.lc.pro-bg{background:rgba(139,92,246,.03)}
+.lc.cal-bg{background:rgba(34,197,94,.03)}
+.lc.pla-bg{background:rgba(59,130,246,.03)}
+.lc.dep-bg{background:rgba(234,179,8,.03)}
+.lc.sis-bg{background:rgba(99,102,241,.03)}
+.lc.ing-bg{background:rgba(249,115,22,.03)}
+.lc.last-col{border-right:none}
+
+.ar{border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;height:30px;position:relative}
+.ar.pro-bg{background:rgba(139,92,246,.02);border-right:1px solid var(--border)}
+.ar.cal-bg{background:rgba(34,197,94,.02); border-right:1px solid var(--border)}
+.ar.pla-bg{background:rgba(59,130,246,.02);border-right:1px solid var(--border)}
+.ar.dep-bg{background:rgba(234,179,8,.02); border-right:1px solid var(--border)}
+.ar.sis-bg{background:rgba(99,102,241,.02);border-right:1px solid var(--border)}
+.ar.ing-bg{background:rgba(249,115,22,.02);border-right:1px solid var(--border)}
+.ar.last-col{border-right:none}
+.ar-corner{background:var(--surface);border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+
+.varr{display:flex;flex-direction:column;align-items:center;height:30px}
+.varr .sh{width:2px;flex:1}
+.varr .hd{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent}
+.varr.pro .sh{background:var(--pro)} .varr.pro .hd{border-top:7px solid var(--pro)}
+.varr.cal .sh{background:var(--cal)} .varr.cal .hd{border-top:7px solid var(--cal)}
+.varr.pla .sh{background:var(--pla)} .varr.pla .hd{border-top:7px solid var(--pla)}
+.varr.dep .sh{background:var(--dep)} .varr.dep .hd{border-top:7px solid var(--dep)}
+.varr.sis .sh{background:var(--sis)} .varr.sis .hd{border-top:7px solid var(--sis)}
+.varr.ing .sh{background:var(--ing)} .varr.ing .hd{border-top:7px solid var(--ing)}
+
+.no-bot{border-bottom:none!important}
+
+.divider-row{grid-column:1/-1;background:rgba(139,92,246,.08);border-top:1px dashed rgba(139,92,246,.4);border-bottom:1px dashed rgba(139,92,246,.4);padding:6px 14px;display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;color:var(--pro);letter-spacing:1.5px;text-transform:uppercase}
+.divider-row::before{content:'⬡';font-size:11px}
+.divider-row.phys{background:rgba(234,179,8,.08);border-top-color:rgba(234,179,8,.4);border-bottom-color:rgba(234,179,8,.4);color:var(--dep)}
+.divider-row.phys::before{content:'⇄'}
+.divider-row.end{background:rgba(34,197,94,.06);border-top-color:rgba(34,197,94,.3);border-bottom-color:rgba(34,197,94,.3);color:var(--cal)}
+.divider-row.end::before{content:'▶'}
+.divider-row.loop{background:rgba(99,102,241,.07);border-top-color:rgba(99,102,241,.4);border-bottom-color:rgba(99,102,241,.4);color:var(--sis)}
+.divider-row.loop::before{content:'↻'}
+.divider-row.warn{background:rgba(249,115,22,.07);border-top-color:rgba(249,115,22,.4);border-bottom-color:rgba(249,115,22,.4);color:var(--ing)}
+.divider-row.warn::before{content:'⚠'}
+
+.card{width:100%;border-radius:7px;padding:10px 10px;border:1px solid;animation:popIn .4s ease both}
+@keyframes popIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.card.pro  {border-color:rgba(139,92,246,.55);background:rgba(139,92,246,.10)}
+.card.pro2 {border-color:rgba(139,92,246,.4); background:rgba(139,92,246,.07)}
+.card.pro3 {border-color:rgba(139,92,246,.3); background:rgba(139,92,246,.05)}
+.card.cal  {border-color:rgba(34,197,94,.5);  background:rgba(34,197,94,.10)}
+.card.cal2 {border-color:rgba(34,197,94,.4);  background:rgba(34,197,94,.07)}
+.card.pla  {border-color:rgba(59,130,246,.55);background:rgba(59,130,246,.10)}
+.card.pla2 {border-color:rgba(59,130,246,.4); background:rgba(59,130,246,.07)}
+.card.dep  {border-color:rgba(234,179,8,.5);  background:rgba(234,179,8,.10)}
+.card.dep2 {border-color:rgba(234,179,8,.4);  background:rgba(234,179,8,.07)}
+.card.sis  {border-color:rgba(99,102,241,.55);background:rgba(99,102,241,.10)}
+.card.sis2 {border-color:rgba(99,102,241,.4); background:rgba(99,102,241,.07)}
+.card.ing  {border-color:rgba(249,115,22,.5); background:rgba(249,115,22,.10)}
+.card.ing2 {border-color:rgba(249,115,22,.4); background:rgba(249,115,22,.07)}
+
+.card-title{font-size:10.5px;font-weight:700;color:var(--white);margin-bottom:4px;line-height:1.3}
+.card-desc {font-size:9.5px;color:var(--muted);line-height:1.5}
+.card-desc em{color:var(--text);font-style:normal;font-weight:600}
+.card-tags {display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.ctag{display:inline-block;padding:2px 5px;border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:8px;background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--border)}
+.cite{display:block;font-style:italic;color:var(--text);background:rgba(234,179,8,.08);padding:5px 7px;border-left:2px solid var(--dep);border-radius:3px;font-size:8.5px;margin-top:6px;line-height:1.5}
+.auto-pill{margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;padding:4px 8px;border-radius:4px;line-height:1.4}
+.auto-pro{background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.35);color:var(--pro)}
+.auto-cal{background:rgba(34,197,94,.10);border:1px solid rgba(34,197,94,.35);color:var(--cal)}
+.auto-dep{background:rgba(234,179,8,.10);border:1px solid rgba(234,179,8,.35);color:var(--dep)}
+.auto-sis{background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.35);color:var(--sis)}
+.auto-ing{background:rgba(249,115,22,.10);border:1px solid rgba(249,115,22,.35);color:var(--ing)}
+.auto-pla{background:rgba(59,130,246,.10);border:1px solid rgba(59,130,246,.35);color:var(--pla)}
+
+.ov{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5}
+
+footer{max-width:1700px;margin:40px auto 0;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);opacity:.5;letter-spacing:2px;text-transform:uppercase;padding-top:20px;border-top:1px solid var(--border)}
+
+/* FEATURES BAR */
+.features-bar{position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:900;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;width:165px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.features-bar.collapsed .toggle-group{display:none}
+.toggle-header{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:2px 4px;border-radius:3px;transition:background .2s;user-select:none;letter-spacing:1px}
+.toggle-header:hover{background:rgba(139,92,246,.08)}
+.toggle-group{margin-top:8px}
+.toggle-item{display:flex;align-items:center;gap:8px;padding:5px 4px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--muted);cursor:pointer;border-radius:3px;transition:all .2s;user-select:none}
+.toggle-item:hover{background:rgba(139,92,246,.08);color:var(--text)}
+.toggle-item.active{color:var(--pro)}
+.toggle-switch{width:14px;height:14px;border:1px solid var(--border);border-radius:3px;position:relative;transition:all .2s;flex-shrink:0}
+.toggle-item.active .toggle-switch{background:var(--pro);border-color:var(--pro)}
+.toggle-item.active .toggle-switch::after{content:'✓';position:absolute;top:-3px;left:1px;font-size:10px;color:var(--bg)}
+
+.analytics-panel{position:fixed;right:200px;top:50%;transform:translateY(-50%);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;width:280px;max-height:65vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:850;display:none}
+.analytics-panel.open{display:block}
+.panel-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--pro);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.stat-group{margin-bottom:14px}
+.stat-lbl{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.stat-val{font-size:20px;font-weight:700;color:var(--white);font-family:'IBM Plex Mono',monospace}
+.stat-det{font-size:9px;color:var(--muted);margin-top:2px;font-family:'IBM Plex Mono',monospace;line-height:1.5}
+.heatmap-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.hm-cell{padding:6px 10px;border-radius:4px;font-size:9px;font-weight:600;font-family:'IBM Plex Mono',monospace;cursor:pointer;transition:transform .2s;text-align:center}
+.hm-cell:hover{transform:scale(1.05)}
+.hm-1{background:rgba(139,92,246,.2);color:var(--pro)}
+.hm-2{background:rgba(99,102,241,.25);color:var(--sis)}
+.hm-3{background:rgba(249,115,22,.25);color:var(--ing)}
+.hm-4{background:rgba(234,179,8,.25);color:var(--dep)}
+.hm-5{background:rgba(34,197,94,.35);color:var(--cal)}
+
+body.pres-mode .routebar,body.pres-mode .features-bar,body.pres-mode .analytics-panel{display:none!important}
+body.pres-mode{padding:0}
+body.pres-mode .diagram{max-width:none;padding:20px}
+.pres-controls{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 16px;z-index:1001;gap:10px;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+body.pres-mode .pres-controls{display:flex}
+.pres-btn{background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.5);color:var(--pro);padding:6px 14px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;cursor:pointer;transition:all .2s;letter-spacing:1px}
+.pres-btn:hover{background:rgba(139,92,246,.25);color:var(--white)}
+.pres-info{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);padding:0 14px;border-left:1px solid var(--border);border-right:1px solid var(--border)}
+
+.card.dimmed{opacity:.18;pointer-events:none}
+.card.lit{box-shadow:0 0 10px currentColor;outline:1px solid currentColor}
+</style>
+</head>
+<body>
+
+<div class="routebar" id="routebar"></div>
+<div id="app"></div>
+<footer>ODOO 17 ENTERPRISE · PRODUCCIÓN Y GESTIÓN DE CALIDAD · ARGUL Y COMPAÑÍA S.A. · PROYECTO SAP/ODOO ARGUL 2026 · v5.0 · alineado con MF Producción y Calidad v3.1</footer>
+
+<script>
+/* ================================================================= */
+/* LANE DEFINITIONS                                                   */
+/* ================================================================= */
+const LANES = {
+  pro: { name: 'PRODUCCIÓN',       icon: '🏭', subtitle: 'supervisores · Natalia Cascardo',              color: 'pro', short: 'Prod.' },
+  cal: { name: 'CALIDAD',          icon: '🔬', subtitle: 'inspectores · Natalia Cascardo',               color: 'cal', short: 'Cal.'  },
+  pla: { name: 'PLANIFICACIÓN',    icon: '📊', subtitle: 'Victoria Gini · Customer Service',             color: 'pla', short: 'Plan.' },
+  dep: { name: 'DEPÓSITO / WMS',   icon: '📦', subtitle: 'Gustavo · Hangel · operarios',                 color: 'dep', short: 'Dep.'  },
+  sis: { name: 'SISTEMA ODOO',     icon: '⚙',  subtitle: 'automático · MRP · mrp_tool_tracking',         color: 'sis', short: 'Sis.'  },
+  ing: { name: 'ING. / MATRICERÍA',icon: '🔧', subtitle: 'Miguel Caro · equipo técnico · Gustavo Adorno',color: 'ing', short: 'Ing.'  }
+};
+
+/* ================================================================= */
+/* PROCESS DEFINITIONS                                                */
+/* ================================================================= */
+const PROCESSES = {
+
+
+
+
+
+
+
+
+
+
+  /* ============================================================= */
+  /* P-CAL-1 Control de Calidad en Recepción                       */
+  /* ============================================================= */
+  pcal1: {
+    code: 'P-CAL-1',
+    name: 'Control de Calidad en Recepción (Inbound)',
+    shortName: 'QC Recepción',
+    type: 'Principal',
+    pcls: 'cm',
+    rqRange: 'RQ-CAL-01 a 08',
+    rqCount: 8,
+    description: 'Control de calidad al recibir materias primas. El objeto de control es el <em>LOTE del proveedor</em> (no el palet). La disponibilidad es independiente de la ubicación física. Devoluciones de clientes con circuito <em>RMA</em> (OCA). El pago al proveedor se liga a la aprobación de Calidad.',
+    shortDesc: 'Control por lote · quality_control OCA · RMA devoluciones · pago vs. QC',
+    inputs: 'Lote de proveedor recibido · plan de control por producto/categoría',
+    outputs: 'Lote liberado/bloqueado · devolución al proveedor · nota de crédito · RMA clientes',
+    lanes: ['cal','dep','sis'],
+    intro: 'Cambios clave de la sesión 2: (a) el control es por LOTE, no por palet — acordado por John, Franco y Natalia; (b) la disponibilidad en inventario es independiente de la ubicación física; (c) devoluciones de clientes con circuito RMA (OCA/rma 17.0 — verificar estabilidad); (d) el pago al proveedor se liga a la aprobación de Calidad (factura se ingresa al recibir por obligación AFIP, pero pago bloqueado hasta aprobación QC).',
+    archNote: 'INPUTS — lote recibido · planes de control SAP migrados. OUTPUTS — lote liberado/bloqueado · decisión QC → nota de crédito/devolución (Finanzas). MÓDULOS — quality_control_oca · quality_control_stock_oca · OCA/rma 17.0. REFERENCIAS — MF Finanzas (pago vs. QC) · MF Ventas (RMA clientes).',
+    steps: [
+      { n: '01', label: 'Plan de control', lane: 'sis', variant: 'sis',
+        title: 'Plan de control en recepción por producto',
+        desc: 'Se configura el Plan de Control (puntos de inspección) por producto o categoría para operaciones de recepción. Los planes existen en SAP y deben migrarse antes del go-live.',
+        tags: ['RQ-CAL-01', 'OCA · quality_control_oca', 'migración de SAP · Natalia gestiona extracción']
+      },
+      { n: '02', label: 'Instrucciones', lane: 'cal', variant: 'cal',
+        title: 'Instrucciones detalladas por punto de control',
+        desc: 'Cada punto muestra: descripción, criterio de aceptación (OK/NOK cualitativo) o campo numérico con rango de tolerancia para mediciones dimensionales. Evaluación automática dentro/fuera de rango. Se contempla adjuntar imágenes de referencia.',
+        tags: ['RQ-CAL-02', 'OCA · quality_control_oca', 'verificar soporte imágenes de referencia']
+      },
+      { n: '03', label: 'Control por lote', lane: 'cal', variant: 'cal',
+        title: 'Control y liberación por lote del proveedor',
+        desc: 'El control opera a nivel <em>LOTE</em> (no palet). El tamaño de muestra se calcula sobre el lote completo. La trazabilidad entre turnos se resuelve con el registro de inspecciones. La ubicación física es independiente del estado de calidad.',
+        tags: ['RQ-CAL-03', 'OCA · quality_control_stock_oca', 'acordado en sesión 2 · control por lote desde el inicio']
+      },
+      { n: '04', label: 'Muestreo y tolerancia', lane: 'sis', variant: 'sis2',
+        title: 'Frecuencia, tamaño de muestra y tolerancia de fallas',
+        desc: 'Frecuencia configurable (siempre/aleatoria/periódica), tamaño de muestra sobre lote completo, tolerancia de fallas (ej.: 1% o tolerancia cero).',
+        tags: ['RQ-CAL-04', 'OCA · quality_control_oca', 'validar configuración con parámetros Argul en Libus']
+      },
+      { divider: 'DECISIÓN DE CALIDAD — Liberación / Rechazo / Bloqueo' },
+      { n: '05', label: 'Bloqueo lote', lane: 'cal', variant: 'cal2',
+        title: 'Bloqueo del lote (independiente de ubicación física)',
+        desc: 'El lote que no supera el control queda bloqueado en Odoo (estado de calidad). Puede moverse físicamente a otra ubicación mientras permanece bloqueado. No puede usarse para producción ni venta. <em>Calidad decide el estado; Depósito decide la ubicación.</em>',
+        tags: ['RQ-CAL-05', 'estándar', 'confirmar desacople estado QC vs. ubicación física']
+      },
+      { n: '06', label: 'Liberación / rechazo', lane: 'cal', variant: 'cal',
+        title: 'Liberación con desvío, rechazo total o parcial',
+        desc: 'Tres opciones: (a) liberar con/sin desvío registrado; (b) liberar parcialmente y bloquear resto para devolución; (c) bloquear todo para devolución. Devolución parcial/total dispara nota de crédito coordinada con Finanzas.',
+        tags: ['RQ-CAL-06', 'estándar', 'coordinar con Finanzas · bloqueo de pago y NC']
+      },
+      { divider: 'CIRCUITO RMA — Devoluciones de clientes', type: 'loop' },
+      { n: '07', label: 'RMA clientes', lane: 'cal', variant: 'cal',
+        title: 'Circuito RMA para devoluciones de clientes',
+        desc: 'Circuito: (1) cliente solicita devolución; (2) Calidad decide si acepta <em>antes</em> del ingreso físico; (3) Depósito recibe orden esperada; (4) material pendiente de control QC; (5) decisión: aceptar con NC, rechazar, o aceptar parcialmente.',
+        tags: ['RQ-CAL-08', 'OCA/rma 17.0 · verificar estabilidad', 'definir escenarios con Finanzas y Ventas'],
+        pill: { color: 'cal', text: '📦 OCA/rma 17.0 · en desarrollo al momento del relevamiento · confirmar estabilidad antes de comprometer' }
+      },
+      { divider: 'MIGRACIÓN — Planes de control desde SAP', type: 'phys' },
+      { n: '08', label: 'Migración planes', lane: 'cal', variant: 'cal2',
+        title: 'Migración de planes de control desde SAP',
+        desc: 'Antes del go-live cargar todos los planes de control activos en Odoo. Natalia gestiona la extracción de SAP. Si no es posible exportar, carga manual.',
+        tags: ['RQ-CAL-07', 'gap', 'Natalia gestiona extracción · consultar Miguel Caro']
+      }
+    ],
+    arrows: [
+      { from: 0, to: 1, lane: 'cal', label: 'plan → inspección' },
+      { from: 3, to: 4, lane: 'cal', label: 'resultado → decisión' }
+    ]
+  },
+
+  /* ============================================================= */
+  /* P-CAL-2 Control de Calidad en Producción                      */
+  /* ============================================================= */
+  pcal2: {
+    code: 'P-CAL-2',
+    name: 'Control de Calidad en Producción',
+    shortName: 'QC Producción',
+    type: 'Principal',
+    pcls: 'cm',
+    rqRange: 'RQ-CAL-09 a 15',
+    rqCount: 7,
+    description: 'Controles de calidad durante la ejecución de OFs. En Producción hay dos tipos: (1) controles cíclicos cada 2-2,5 hs (Etapa 2) y (2) bloqueo de palet por falla detectada (Etapa 1). Los planes se vinculan al <em>MOLDE</em> (operación de la work order), no al producto.',
+    shortDesc: 'Planes por molde · bloqueo palet · clasificación · quality_control_mrp_oca',
+    inputs: 'Orden de fabricación en ejecución · plan de calidad por operación (molde)',
+    outputs: 'Palet liberado / bloqueado / clasificado / enviado a scrap',
+    lanes: ['cal','pro','sis'],
+    intro: 'Aclaración de la sesión 2: los controles cíclicos (múltiples registros sobre órdenes de semanas) tienen complejidad técnica y son candidatos a Etapa 2. La prioridad de Etapa 1 es el circuito de bloqueo/liberación de palets. Los planes de calidad en producción se vinculan al MOLDE (operación de la work order), no al producto: un mismo producto fabricado con distintos moldes puede tener distintos planes. Confirmado con Franco: Odoo lo soporta.',
+    archNote: 'INPUTS — OF en ejecución · planes de calidad por operación. OUTPUTS — palet liberado/bloqueado/clasificado. MÓDULOS — quality_control_mrp_oca. Etapa 2: controles cíclicos en tablet.',
+    steps: [
+      { n: '01', label: 'Plan por molde', lane: 'sis', variant: 'sis',
+        title: 'Plan de control de producción por molde/operación',
+        desc: 'Los planes de control se cargan en Odoo por <em>operación de work order</em> (que representa el molde). Un mismo producto puede tener distintos planes según el molde. Los inspectores acceden al plan desde Odoo sin consultar SAP.',
+        tags: ['RQ-CAL-09', 'RQ-CAL-15', 'OCA · quality_control_mrp_oca', 'confirmado con Franco']
+      },
+      { n: '02', label: 'Controles cíclicos', lane: 'cal', variant: 'cal2',
+        title: 'Puntos de control cíclicos (cada 2-2,5 hs) — Etapa 2',
+        desc: 'Los controles cíclicos se hacen hoy con hojas de autocontrol en papel en cada inyectora. Complejidad técnica: varios registros por turno sobre órdenes que duran semanas. Candidato a Etapa 2 (implementación en tablet).',
+        tags: ['RQ-CAL-10', 'fuera de alcance Etapa 1', 'Etapa 2']
+      },
+      { divider: 'CIRCUITO DE BLOQUEO / LIBERACIÓN — Prioridad Etapa 1' },
+      { n: '03', label: 'Bloqueo palet', lane: 'cal', variant: 'cal',
+        title: 'Bloqueo de palet/lote por falla detectada',
+        desc: 'El inspector marca en Odoo palets producidos como bloqueados por calidad. El stock queda en estado bloqueado: no disponible para despacho ni planificación.',
+        tags: ['RQ-CAL-11', 'estándar', 'sin gap']
+      },
+      { n: '04', label: 'Decisión', lane: 'cal', variant: 'cal',
+        title: 'Decisión sobre producto bloqueado: tres opciones',
+        desc: 'Ante producto bloqueado: (1) liberar con desvío, (2) clasificar (scrap parcial + parte buena), (3) enviar todo a scrap. Historial vinculado al lote y a la OF.',
+        tags: ['RQ-CAL-12', 'estándar', 'verificar circuito desecho parcial en Libus']
+      },
+      { n: '05', label: 'Liberación desvío', lane: 'cal', variant: 'cal2',
+        title: 'Liberación con registro de desvío',
+        desc: 'Al liberar con desvío se registra motivo y descripción, vinculado al lote/palet y a la orden.',
+        tags: ['RQ-CAL-13', 'estándar', 'sin gap']
+      },
+      { n: '06', label: 'Clasificación', lane: 'pro', variant: 'pro',
+        title: 'Clasificación de producto retenido (mixto)',
+        desc: 'Un operario clasifica piezas buenas y piezas con defecto. Genera: stock liberado de piezas buenas + scrap de piezas descartadas. Ambos movimientos registrados.',
+        tags: ['RQ-CAL-14', 'estándar', 'validar flujo nativo en entorno de pruebas']
+      }
+    ],
+    arrows: [
+      { from: 2, to: 3, lane: 'cal', label: 'bloqueo → decisión' }
+    ]
+  },
+
+  /* ============================================================= */
+  /* P-CAL-3 Gestión de Scrap desde Calidad                        */
+  /* ============================================================= */
+  pcal3: {
+    code: 'P-CAL-3',
+    name: 'Gestión de Scrap desde Calidad',
+    shortName: 'Scrap (Calidad)',
+    type: 'Operativo',
+    pcls: 'po',
+    rqRange: 'RQ-CAL-16, 17, 19, 20, 21',
+    rqCount: 5,
+    description: 'Calidad interviene cuando detecta <em>Producto No Conforme</em>. Calidad NO interviene en scrap de arranque, regulación ni barrido (Producción). La etiqueta imprimible A4 (<em>DEV-CAL-01</em>) habilita a molienda. El wizard DEV-PRO-02 se comparte como <em>DEV-CAL-02</em>.',
+    shortDesc: 'Scrap por QC · etiqueta A4 · DEV-CAL-01 · DEV-CAL-02 · IPP proveedor',
+    inputs: 'Producto bloqueado por decisión de Calidad',
+    outputs: 'Stock movido a ubicación virtual de scrap · etiqueta A4 para molienda · IPP al proveedor',
+    lanes: ['cal','pro','sis'],
+    intro: 'Aclaración de la sesión 2: el RQ-CAL-18 original (scrap de producción durante la orden) se eliminó de Calidad y se reasignó a Producción como RQ-PRO-14. Calidad solo interviene en el scrap posterior a la detección de Producto No Conforme. La etiqueta A4 (DEV-CAL-01) es el componente compartido entre Producción y Calidad para habilitar molienda. El IPP (Informe de Problemas con Proveedor, RQ-CAL-21) se gestiona con alertas de calidad del módulo OCA.',
+    archNote: 'INPUTS — producto bloqueado. OUTPUTS — scrap en ubicación virtual + etiqueta A4. DEV — DEV-CAL-01 (etiqueta A4 compartida) · DEV-CAL-02 (ref. cruzada DEV-PRO-02). GAP — RQ-CAL-21 (IPP): esperar política ABC de proveedores.',
+    steps: [
+      { n: '01', label: 'Envío a scrap', lane: 'cal', variant: 'cal',
+        title: 'Registro de envío de producto a scrap',
+        desc: 'El scrap se mueve a ubicación virtual de scrap (no disponible). Movimiento registrado con fecha, responsable, cantidad y orden asociada.',
+        tags: ['RQ-CAL-16', 'estándar', 'sin gap']
+      },
+      { n: '02', label: 'Etiqueta A4', lane: 'sis', variant: 'sis',
+        title: 'Etiqueta imprimible de scrap (formato A4)',
+        desc: 'Al registrar envío a scrap se genera etiqueta A4 que identifica lote/cantidad y habilita a molienda. Calidad no tiene impresora Zebra → A4 en impresora estándar. Componente compartido con DEV-PRO-02.',
+        tags: ['RQ-CAL-17', 'DEV-CAL-01', 'compartido con DEV-PRO-02'],
+        pill: { color: 'cal', text: '🔧 DEV-CAL-01 · etiqueta A4 para molienda · compartido con Producción' }
+      },
+      { n: '03', label: 'Etiqueta desde QC', lane: 'cal', variant: 'cal2',
+        title: 'Impresión de etiqueta desde circuito de Calidad',
+        desc: 'Cuando Calidad decide enviar producto bloqueado a scrap, el sistema genera la misma etiqueta A4 (DEV-CAL-01). Habilita a molienda.',
+        tags: ['RQ-CAL-19', 'DEV-CAL-01', 'mismo componente']
+      },
+      { divider: 'IPP — Informe de Problemas con Proveedor', type: 'loop' },
+      { n: '04', label: 'IPP proveedor', lane: 'cal', variant: 'cal',
+        title: 'IPP — Informe de Problemas con Proveedor',
+        desc: 'El módulo OCA de alertas de calidad puede cubrir el IPP: registro del problema, envío al proveedor, seguimiento de respuesta y acciones correctivas. Esperar política escrita de evaluación de proveedores (ABC) antes de configurar.',
+        tags: ['RQ-CAL-21', 'gap', 'esperar política ABC · definir circuito con Calidad y Compras'],
+        pill: { color: 'dep', text: '⚠ GAP · esperar política de evaluación de proveedores (ABC) antes de configurar' }
+      },
+      { n: '05', label: 'Scrap barrido', lane: 'pro', variant: 'pro3',
+        title: 'Scrap de barrido — Fuera de alcance',
+        desc: 'Piezas contaminadas (piso, zonas no habilitadas). No se declaran en SAP. No es proceso de Calidad. Fuera de alcance Etapa 1.',
+        tags: ['RQ-CAL-20', 'fuera de alcance', 'no es proceso de Calidad']
+      }
+    ],
+    arrows: [
+      { from: 0, to: 1, lane: 'sis', label: 'scrap → etiqueta' }
+    ]
+  },
+
+  /* ============================================================= */
+  /* P-CAL-4 Reportes de Calidad                                   */
+  /* ============================================================= */
+  pcal4: {
+    code: 'P-CAL-4',
+    name: 'Reportes de Calidad',
+    shortName: 'Reportes CAL',
+    type: 'Soporte',
+    pcls: 'ps',
+    rqRange: 'RQ-CAL-22 a 24',
+    rqCount: 3,
+    description: 'Reportes de calidad disponibles en Fase 1 y KPIs para fase posterior. El reporte de stock en 901 > 48 hs (DEV-CAL-03) es condicional a DEV-PRO-03. Con datos acumulados se construirán indicadores por proveedor.',
+    shortDesc: 'Reportes OCA nativos · stock 901 · KPIs fase posterior',
+    inputs: 'Datos de inspección y decisiones de calidad acumulados',
+    outputs: 'Reportes de QC ejecutados / rechazados · tasa de rechazo · stock 901',
+    lanes: ['cal','sis'],
+    intro: 'Los reportes estándar de quality_control_oca proveen puntos de control ejecutados, resultados de inspección, tasa de rechazo por producto y por proveedor desde el go-live. El reporte de stock en ubicación 901 con antigüedad > 48 hs (DEV-CAL-03) es el mismo que DEV-PRO-04 pero accesible desde Calidad. Los KPIs avanzados (fallas por molde, por cavidad, eficiencia de control) se planificarán una vez acumulados datos.',
+    archNote: 'OUTPUTS — reportes OCA nativos · DEV-CAL-03 (stock 901 > 48 hs, condicional). DEV — DEV-CAL-03: mismo reporte que DEV-PRO-04, puede unificarse con permisos.',
+    steps: [
+      { n: '01', label: 'Reportes QC', lane: 'sis', variant: 'sis',
+        title: 'Reportes estándar de calidad (OCA nativos)',
+        desc: 'Puntos de control ejecutados, resultados de inspección (aprobados/rechazados), tasa de rechazo por producto y por proveedor. Disponibles desde el go-live con quality_control_oca.',
+        tags: ['RQ-CAL-22', 'OCA · quality_control_oca', 'sin gap · datos acumulados → indicadores']
+      },
+      { n: '02', label: 'Stock 901', lane: 'cal', variant: 'cal',
+        title: 'Reporte de stock en ubicación 901 > 48 hs',
+        desc: 'Mismo reporte que DEV-PRO-04 accesible desde Calidad. Detecta notificaciones erróneas. Condicional a DEV-PRO-03.',
+        tags: ['RQ-CAL-23', 'DEV-CAL-03', 'condicional a DEV-PRO-03 · puede unificarse con DEV-PRO-04'],
+        pill: { color: 'pro', text: '🔧 DEV-CAL-03 · puede unificarse con DEV-PRO-04 · prioridad media' }
+      },
+      { n: '03', label: 'KPIs (posterior)', lane: 'sis', variant: 'sis2',
+        title: 'KPIs de calidad — fase posterior',
+        desc: 'Dashboards: fallas por molde, fallas por cavidad, tasa de scrap por orden, rechazo por proveedor, eficiencia de control. A planificar una vez acumulados datos en el sistema.',
+        tags: ['RQ-CAL-24', 'fuera de alcance', 'fase posterior']
+      }
+    ],
+    arrows: []
+  }
+
+};
+
+/* ================================================================= */
+/* PROCESS GROUPS                                                     */
+/* ================================================================= */
+const GROUPS = [
+  { title: 'GESTIÓN DE CALIDAD', cls: 'part-cal', pids: ['pcal1','pcal2','pcal3','pcal4'] }
+];
+const ALL_PIDS = GROUPS.flatMap(g => g.pids);
+
+/* ================================================================= */
+/* RENDER HELPERS                                                     */
+/* ================================================================= */
+function el(tag, attrs={}, ...children){
+  const e = document.createElement(tag);
+  for(const k in attrs){
+    if(k === 'class') e.className = attrs[k];
+    else if(k === 'html') e.innerHTML = attrs[k];
+    else if(k.startsWith('on')) e.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  children.forEach(c => {
+    if(c == null) return;
+    if(typeof c === 'string' || typeof c === 'number') e.appendChild(document.createTextNode(String(c)));
+    else if(c instanceof Node) e.appendChild(c);
+  });
+  return e;
+}
+
+/* ================================================================= */
+/* ROUTE BAR                                                          */
+/* ================================================================= */
+function renderRouteBar(route){
+  const bar = document.getElementById('routebar');
+  bar.innerHTML = '';
+  const left = el('div',{class:'routebar-left'});
+  left.appendChild(el('span',{html:'🔬 GESTIÓN DE CALIDAD'}));
+  left.appendChild(el('span',{class:'crumb-sep',html:'/'}));
+
+  if(route === 'overview'){
+    left.appendChild(el('span',{class:'crumb-active'},'PROCESOS DE NEGOCIO'));
+  } else {
+    const proc = PROCESSES[route];
+    left.appendChild(el('span',{},'Procesos de negocio'));
+    left.appendChild(el('span',{class:'crumb-sep',html:'/'}));
+    left.appendChild(el('span',{class:'crumb-active'}, proc.code + ' · ' + proc.shortName));
+    const right = el('div',{class:'routebar-right'});
+    right.appendChild(el('a',{href:'#/overview'},'← Volver a overview'));
+    bar.appendChild(left);
+    bar.appendChild(right);
+    return;
+  }
+  bar.appendChild(left);
+  const right = el('div',{class:'routebar-right'},'v5.0 · 30-abr-2026');
+  bar.appendChild(right);
+}
+
+/* ================================================================= */
+/* OVERVIEW VIEW                                                      */
+/* ================================================================= */
+function renderOverview(){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const header = el('header',{class:'page'});
+  header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Gestión de Calidad · Argul y Compañía S.A.'));
+  header.appendChild(el('span',{class:'version-badge'},'Procesos de Negocio · 4 procesos'));
+  const h1 = el('h1');
+  h1.innerHTML = 'Procesos de Negocio de <span class="cal">Gestión de Calidad</span>';
+  header.appendChild(h1);
+  header.appendChild(el('p',{},'Plataforma de navegación · 4 flujos · 24 requerimientos · 3 desarrollos (DEV-CAL-01/02/03) · 5 módulos OCA'));
+  app.appendChild(header);
+
+  const legend = el('div',{class:'legend'});
+  Object.entries(LANES).forEach(([key, lane]) => {
+    const item = el('div',{class:'legend-item'});
+    item.appendChild(el('div',{class:'legend-dot',style:`background:var(--${lane.color})`}));
+    item.appendChild(document.createTextNode(lane.name));
+    legend.appendChild(item);
+  });
+  app.appendChild(legend);
+
+  app.appendChild(el('div',{
+    class:'intro-note',
+    html:'<strong>⬡ ORIENTACIÓN —</strong> Esta plataforma cubre los 4 procesos del área de Gestión de Calidad. <strong>Natalia Cascardo</strong> es la Key User. Calidad es un área cross de soporte a todas las demás áreas. Controla recepción y producción con módulos OCA <strong>quality_control_*</strong>. El circuito RMA se gestiona con <strong>OCA/rma</strong> (17.0). Los procesos de Producción se documentan en un MF y HTML separados. Hacé click en cualquier tarjeta para ver el flujo detallado.'
+  }));
+
+  app.appendChild(el('div',{
+    class:'arch-note',
+    html:'<strong>⬢ DESARROLLOS Y MÓDULOS OCA —</strong> Módulos OCA confirmados: <strong>quality_control_oca</strong> · <strong>quality_control_mrp_oca</strong> · <strong>quality_control_stock_oca</strong> (confirmar 17.0) · <strong>OCA/rma</strong> (17.0 en desarrollo — verificar estabilidad). Desarrollos custom: <strong>DEV-CAL-01</strong> (etiqueta A4, compartida con Producción) · <strong>DEV-CAL-02</strong> (wizard Producto No Conforme, ref. cruzada DEV-PRO-02) · <strong>DEV-CAL-03</strong> (stock 901 vista CAL). Los desarrollos de Producción se documentan en el MF/HTML de Producción.'
+  }));
+
+  const overviewWrap = el('div',{class:'overview-wrap'});
+
+  /* MACRO FLOW */
+  overviewWrap.appendChild(el('div',{class:'section-title'},'Macro-flujo · eslabonamiento de procesos'));
+  const macro = el('div',{class:'macro-flow'});
+  function macroStep(pid){
+    const p = PROCESSES[pid];
+    const step = el('a',{class:`macro-step ${p.pcls}`, href:`#/${pid}`});
+    step.appendChild(el('div',{class:'macro-code'}, p.code + ' · ' + p.type.toUpperCase()));
+    step.appendChild(el('div',{class:'macro-name'}, p.shortName));
+    step.appendChild(el('div',{class:'macro-hint'}, p.shortDesc.split('·')[0]));
+    return step;
+  }
+  function macroArrow(){ return el('div',{class:'macro-arrow'},'→'); }
+
+  /* Production flow */
+  ['pcal1','pcal2','pcal3','pcal4'].forEach((pid,i,arr) => {
+    macro.appendChild(macroStep(pid));
+    if(i < arr.length-1) macro.appendChild(macroArrow());
+  });
+  overviewWrap.appendChild(macro);
+
+  /* PART 1 — PRODUCCIÓN cards */
+  GROUPS.forEach(group => {
+    overviewWrap.appendChild(el('div',{class:`part-divider ${group.cls}`}, group.title));
+    overviewWrap.appendChild(el('div',{class:'section-title'},'Procesos · click para navegar al diagrama'));
+    const grid = el('div',{class:'pgrid'});
+    group.pids.forEach(pid => {
+      const p = PROCESSES[pid];
+      const card = el('a',{class:`pcard ${p.pcls}`, href:`#/${pid}`});
+
+      const head = el('div',{class:'pcard-head'});
+      head.appendChild(el('div',{class:'pcard-code'}, p.code));
+      head.appendChild(el('div',{class:'pcard-type'}, p.type));
+      card.appendChild(head);
+
+      card.appendChild(el('div',{class:'pcard-title'}, p.name));
+      card.appendChild(el('div',{class:'pcard-desc', html: p.description}));
+
+      if(p.inputs || p.outputs){
+        const io = el('div',{class:'pcard-io'});
+        if(p.inputs){
+          const r = el('div',{class:'io-row'});
+          r.appendChild(el('span',{class:'io-label'},'IN:'));
+          r.appendChild(el('span',{class:'io-text'}, p.inputs));
+          io.appendChild(r);
+        }
+        if(p.outputs){
+          const r = el('div',{class:'io-row'});
+          r.appendChild(el('span',{class:'io-label out'},'OUT:'));
+          r.appendChild(el('span',{class:'io-text'}, p.outputs));
+          io.appendChild(r);
+        }
+        card.appendChild(io);
+      }
+
+      const lanesActive = activeLanes(p);
+      const lanesRow = el('div',{class:'pcard-lanes'});
+      lanesActive.forEach(laneKey => {
+        const lane = LANES[laneKey];
+        lanesRow.appendChild(el('span',{class:`lane-chip ${laneKey}`}, '● ' + lane.short));
+      });
+      card.appendChild(lanesRow);
+
+      const meta = el('div',{class:'pcard-meta'});
+      const g1 = el('div',{class:'meta-group'});
+      g1.appendChild(el('span',{class:'meta-label'},'RQs:'));
+      g1.appendChild(el('span',{class:'meta-value'}, p.rqCount));
+      meta.appendChild(g1);
+      const g2 = el('div',{class:'meta-group'});
+      g2.appendChild(el('span',{class:'meta-label'},'rango:'));
+      g2.appendChild(el('span',{class:'meta-value'}, p.rqRange));
+      meta.appendChild(g2);
+      const g3 = el('div',{class:'meta-group'});
+      g3.appendChild(el('span',{class:'meta-label'},'pasos:'));
+      g3.appendChild(el('span',{class:'meta-value'}, p.steps.filter(s=>!s.divider).length));
+      meta.appendChild(g3);
+      card.appendChild(meta);
+
+      card.appendChild(el('div',{class:'pcard-cta'}, 'Ver diagrama →'));
+      grid.appendChild(card);
+    });
+    overviewWrap.appendChild(grid);
+  });
+
+  app.appendChild(overviewWrap);
+}
+
+/* ================================================================= */
+/* PROCESS DIAGRAM VIEW                                               */
+/* ================================================================= */
+function activeLanes(proc){
+  const used = new Set();
+  proc.steps.forEach(s => { if(s.lane) used.add(s.lane); });
+  return proc.lanes.filter(l => used.has(l));
+}
+
+function renderProcess(pid){
+  const proc = PROCESSES[pid];
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const header = el('header',{class:'page'});
+  header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Gestión de Calidad · Argul y Compañía S.A.'));
+  header.appendChild(el('span',{class:'version-badge'}, proc.code + ' · ' + proc.type));
+  const h1 = el('h1');
+  const isCAL = proc.code.startsWith('P-CAL');
+  h1.innerHTML = 'Proceso de <span class="' + (isCAL?'cal':'pro') + '">' + proc.shortName + '</span>';
+  header.appendChild(h1);
+  header.appendChild(el('p',{}, proc.name + ' · ' + proc.rqRange));
+  app.appendChild(header);
+
+  const lanesActive = activeLanes(proc);
+  const legend = el('div',{class:'legend'});
+  lanesActive.forEach(laneKey => {
+    const lane = LANES[laneKey];
+    const item = el('div',{class:'legend-item'});
+    item.appendChild(el('div',{class:'legend-dot',style:`background:var(--${lane.color})`}));
+    item.appendChild(document.createTextNode(lane.name));
+    legend.appendChild(item);
+  });
+  app.appendChild(legend);
+
+  if(proc.intro) app.appendChild(el('div',{class:'intro-note',html:'<strong>⬡ CONTEXTO —</strong> ' + proc.intro}));
+  if(proc.archNote) app.appendChild(el('div',{class:'arch-note',html:'<strong>◆ ' + proc.archNote}));
+
+  const diagramWrap = el('div',{class:'diagram'});
+  const diagramRel = el('div',{class:'diagram-rel'});
+  diagramWrap.appendChild(diagramRel);
+
+  const lanes = lanesActive;
+  const idealLaneWidth = 330;
+  const totalWidth = Math.min(90 + lanes.length * idealLaneWidth, 1700);
+  const sw = el('div',{
+    class:'sw', id:'grid',
+    style:`grid-template-columns:90px repeat(${lanes.length},minmax(260px,1fr));max-width:${totalWidth}px;margin:0 auto;`
+  });
+
+  sw.appendChild(el('div',{class:'hdr-corner'},'PASO'));
+  lanes.forEach((laneKey, idx) => {
+    const lane = LANES[laneKey];
+    const extraCls = (idx === lanes.length - 1) ? ' hdr-last' : '';
+    const h = el('div',{class:`hdr hdr-${lane.color}${extraCls}`});
+    h.innerHTML = `${lane.icon}<br>${lane.name}<br><span style="font-size:7.5px;opacity:.7">${lane.subtitle}</span>`;
+    sw.appendChild(h);
+  });
+
+  const steps = proc.steps;
+  let i = 0;
+  while(i < steps.length){
+    const step = steps[i];
+    if(step.divider){
+      const dtype = step.type || '';
+      sw.appendChild(el('div',{class:'divider-row' + (dtype ? ' '+dtype : '')}, step.divider));
+      i++;
+      continue;
+    }
+
+    const rowSteps = [step];
+    let j = i + 1;
+    while(j < steps.length && !steps[j].divider && steps[j].groupWith === step.n){
+      rowSteps.push(steps[j]);
+      j++;
+    }
+
+    const sl = el('div',{class:'sl'});
+    sl.innerHTML = `<strong>${step.n}</strong>${step.label||''}`;
+    sw.appendChild(sl);
+
+    const stepByLane = {};
+    rowSteps.forEach(s => { stepByLane[s.lane] = s; });
+
+    lanes.forEach((laneKey, idx) => {
+      const lane = LANES[laneKey];
+      const isLast = (idx === lanes.length - 1);
+      const extraCls = isLast ? ' last-col' : '';
+      const lc = el('div',{class:`lc ${lane.color}-bg${extraCls}`});
+      if(stepByLane[laneKey]){
+        const s = stepByLane[laneKey];
+        const card = el('div',{class:`card ${s.variant}`});
+        card.appendChild(el('div',{class:'card-title'}, s.title));
+        card.appendChild(el('div',{class:'card-desc',html: s.desc}));
+        if(s.tags && s.tags.length){
+          const tagsDiv = el('div',{class:'card-tags'});
+          s.tags.forEach(t => tagsDiv.appendChild(el('span',{class:'ctag'}, t)));
+          card.appendChild(tagsDiv);
+        }
+        if(s.cite) card.appendChild(el('span',{class:'cite'}, s.cite));
+        if(s.pill) card.appendChild(el('div',{class:`auto-pill auto-${s.pill.color}`, html: s.pill.text}));
+        lc.appendChild(card);
+      }
+      sw.appendChild(lc);
+    });
+
+    const nextStepIdx = j;
+    const hasNextContent = nextStepIdx < steps.length;
+    const nextIsEndDivider = hasNextContent && steps[nextStepIdx].divider && steps[nextStepIdx].type === 'end';
+
+    if(hasNextContent && !nextIsEndDivider){
+      let nextContentStep = null;
+      let k = nextStepIdx;
+      while(k < steps.length){ if(!steps[k].divider){ nextContentStep = steps[k]; break; } k++; }
+      sw.appendChild(el('div',{class:'ar-corner'}));
+      lanes.forEach((laneKey, idx) => {
+        const lane = LANES[laneKey];
+        const isLast = (idx === lanes.length - 1);
+        const extraCls = isLast ? ' last-col' : '';
+        const ar = el('div',{class:`ar ${lane.color}-bg${extraCls}`});
+        if(nextContentStep && nextContentStep.lane === laneKey){
+          const varr = el('div',{class:`varr ${lane.color}`});
+          varr.appendChild(el('div',{class:'sh'}));
+          varr.appendChild(el('div',{class:'hd'}));
+          ar.appendChild(varr);
+        }
+        sw.appendChild(ar);
+      });
+    }
+
+    i = j;
+  }
+
+  diagramRel.appendChild(sw);
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','ov');
+  svg.setAttribute('id','ov');
+  diagramRel.appendChild(svg);
+  app.appendChild(diagramWrap);
+  requestAnimationFrame(() => drawArrows(proc));
+}
+
+function drawArrows(proc){
+  const svg = document.getElementById('ov');
+  if(!svg) return;
+  const wrap = svg.parentElement, wr = wrap.getBoundingClientRect();
+  svg.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+  const defs = document.createElementNS(ns, 'defs');
+  ['pro','cal','pla','dep','sis','ing'].forEach(c => {
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--' + c).trim() || '#ccc';
+    const mk = document.createElementNS(ns, 'marker');
+    mk.setAttribute('id', 'm' + c);
+    mk.setAttribute('markerWidth','8');
+    mk.setAttribute('markerHeight','8');
+    mk.setAttribute('refX','7');
+    mk.setAttribute('refY','3');
+    mk.setAttribute('orient','auto');
+    const pth = document.createElementNS(ns, 'path');
+    pth.setAttribute('d','M0,0 L0,6 L8,3 z');
+    pth.setAttribute('fill', hex);
+    mk.appendChild(pth);
+    defs.appendChild(mk);
+  });
+  svg.appendChild(defs);
+  if(!proc.arrows || !proc.arrows.length) return;
+  const cards = Array.from(document.querySelectorAll('.card'));
+  if(cards.length < 2) return;
+  function rc(el){
+    const r = el.getBoundingClientRect();
+    return { cx: r.left-wr.left+r.width/2, cy: r.top-wr.top+r.height/2, l: r.left-wr.left, r: r.right-wr.left, t: r.top-wr.top, b: r.bottom-wr.top };
+  }
+  function line(x1,y1,x2,y2,col,mid,lbl){
+    const path = document.createElementNS(ns,'path');
+    path.setAttribute('d',`M${x1},${y1} H${x2} V${y2}`);
+    path.setAttribute('stroke',col);
+    path.setAttribute('stroke-width','2');
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke-dasharray','6,3');
+    path.setAttribute('marker-end',`url(#${mid})`);
+    svg.appendChild(path);
+    if(lbl){
+      const txt = document.createElementNS(ns,'text');
+      txt.setAttribute('x',(x1+x2)/2);
+      txt.setAttribute('y',y1-5);
+      txt.setAttribute('text-anchor','middle');
+      txt.setAttribute('font-size','9');
+      txt.setAttribute('font-family','IBM Plex Mono,monospace');
+      txt.setAttribute('fill',col);
+      txt.setAttribute('opacity','.9');
+      txt.textContent = lbl;
+      svg.appendChild(txt);
+    }
+  }
+  proc.arrows.forEach(a => {
+    if(a.from >= cards.length || a.to >= cards.length) return;
+    const c1 = rc(cards[a.from]), c2 = rc(cards[a.to]);
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--'+a.lane).trim();
+    if(Math.abs(c1.cy-c2.cy) < 50){
+      const x1 = c1.cx>c2.cx ? c1.l : c1.r;
+      const x2 = c1.cx>c2.cx ? c2.r : c2.l;
+      line(x1,c1.cy,x2,c2.cy,hex,'m'+a.lane,a.label);
+    } else {
+      const x1 = c1.r;
+      const x2 = c2.l > c1.r ? c2.l : c2.r;
+      line(x1,c1.cy,x2,c2.cy,hex,'m'+a.lane,a.label);
+    }
+  });
+}
+
+/* ================================================================= */
+/* ROUTER                                                             */
+/* ================================================================= */
+function router(){
+  const hash = window.location.hash || '#/overview';
+  const path = hash.replace(/^#\//, '');
+  if(PROCESSES[path]){ renderRouteBar(path); renderProcess(path); }
+  else { window.location.hash = '#/overview'; renderRouteBar('overview'); renderOverview(); }
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange', router);
+window.addEventListener('load', router);
+window.addEventListener('resize', () => {
+  const hash = window.location.hash.replace(/^#\//,'');
+  if(PROCESSES[hash]) drawArrows(PROCESSES[hash]);
+});
+</script>
+
+<!-- ========== FEATURES ========== -->
+<div class="features-bar" id="featuresBar">
+  <div class="toggle-header" onclick="collapseBar()">⚙ Features <span id="collapseArrow">▼</span></div>
+  <div class="toggle-group">
+    <div class="toggle-item" id="tog-analytics" onclick="toggleFeature('analytics')"><div class="toggle-switch"></div>Vista de Análisis</div>
+    <div class="toggle-item" id="tog-presentation" onclick="toggleFeature('presentation')"><div class="toggle-switch"></div>Modo Presentación</div>
+  </div>
+</div>
+
+<div class="analytics-panel" id="analyticsPanel">
+  <div class="panel-title">📊 Análisis del Proceso</div>
+  <div class="stat-group">
+    <div class="stat-lbl">Proceso actual</div>
+    <div class="stat-val" id="aCode">—</div>
+    <div class="stat-det" id="aName">Seleccioná un proceso</div>
+  </div>
+  <div class="stat-group">
+    <div class="stat-lbl">Pasos totales</div>
+    <div class="stat-val" id="aSteps">0</div>
+    <div class="stat-det" id="aLanes">—</div>
+  </div>
+  <div class="stat-group">
+    <div class="stat-lbl">Mapa de calor · frecuencia de uso</div>
+    <div class="heatmap-grid" id="aHeat"></div>
+  </div>
+</div>
+
+<div class="pres-controls" id="presControls">
+  <button class="pres-btn" onclick="presNav(-1)">◀ Anterior</button>
+  <div class="pres-info" id="presInfo">Proceso 1 / 13</div>
+  <button class="pres-btn" onclick="presNav(1)">Siguiente ▶</button>
+  <button class="pres-btn" onclick="exitPres()">Salir [ESC]</button>
+</div>
+
+<script>
+const FT = { analytics:false, presentation:false };
+let _presIdx = 0;
+const PRES_ORDER = ALL_PIDS;
+const HEAT = { pcal1:5, pcal2:5, pcal3:4, pcal4:2 };
+
+function collapseBar(){
+  const bar = document.getElementById('featuresBar');
+  const arr = document.getElementById('collapseArrow');
+  bar.classList.toggle('collapsed');
+  arr.textContent = bar.classList.contains('collapsed') ? '▲' : '▼';
+}
+
+function toggleFeature(key){
+  FT[key] = !FT[key];
+  const tog = document.getElementById(`tog-${key}`);
+  tog.classList.toggle('active', FT[key]);
+  if(key === 'analytics'){ document.getElementById('analyticsPanel').classList.toggle('open', FT[key]); if(FT[key]) refreshAnalytics(); }
+  else if(key === 'presentation'){ if(FT[key]) enterPres(); else exitPres(); }
+}
+
+function refreshAnalytics(){
+  const hash = window.location.hash.replace(/^#\//,'');
+  const proc = PROCESSES[hash];
+  if(!proc){ document.getElementById('aCode').textContent='—'; return; }
+  document.getElementById('aCode').textContent = proc.code;
+  document.getElementById('aName').textContent = proc.name;
+  const content = proc.steps.filter(s=>!s.divider);
+  document.getElementById('aSteps').textContent = content.length;
+  const byLane = {};
+  content.forEach(s=>{ byLane[s.lane]=(byLane[s.lane]||0)+1; });
+  document.getElementById('aLanes').textContent = Object.entries(byLane).map(([k,v])=>`${LANES[k].name}: ${v}`).join(' · ');
+  const heat = document.getElementById('aHeat');
+  heat.innerHTML = '';
+  Object.keys(PROCESSES).forEach(pid=>{
+    const h = HEAT[pid]||1;
+    const d = document.createElement('div');
+    d.className = `hm-cell hm-${h}`;
+    d.textContent = PROCESSES[pid].code;
+    d.title = `${PROCESSES[pid].code} · Frecuencia ${h}/5`;
+    d.onclick = ()=>{ window.location.hash='#/'+pid; };
+    heat.appendChild(d);
+  });
+}
+
+function enterPres(){
+  document.body.classList.add('pres-mode');
+  const cur = window.location.hash.replace(/^#\//,'');
+  _presIdx = Math.max(0, PRES_ORDER.indexOf(cur));
+  updatePresInfo();
+  document.addEventListener('keydown', presKey);
+}
+function exitPres(){
+  document.body.classList.remove('pres-mode');
+  document.removeEventListener('keydown', presKey);
+  FT.presentation = false;
+  document.getElementById('tog-presentation').classList.remove('active');
+}
+function presKey(e){
+  if(e.key==='ArrowRight') presNav(1);
+  else if(e.key==='ArrowLeft') presNav(-1);
+  else if(e.key==='Escape') exitPres();
+}
+function presNav(dir){
+  _presIdx = (_presIdx + dir + PRES_ORDER.length) % PRES_ORDER.length;
+  window.location.hash = '#/' + PRES_ORDER[_presIdx];
+  updatePresInfo();
+}
+function updatePresInfo(){
+  document.getElementById('presInfo').textContent = `Proceso ${_presIdx+1} / ${PRES_ORDER.length}`;
+}
+
+window.addEventListener('hashchange', ()=>{
+  setTimeout(()=>{
+    if(FT.analytics) refreshAnalytics();
+    if(FT.presentation) updatePresInfo();
+  }, 200);
+});
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{ if(FT.analytics) refreshAnalytics(); }, 300);
+});
+</script>
+
+</body>
+</html>

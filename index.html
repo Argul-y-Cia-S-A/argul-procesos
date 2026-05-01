@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de Procesos — Argul y Compañía S.A. | Odoo 17 Enterprise</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--border:#21262d;
+  --text:#e6edf3;--muted:#8b949e;--white:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);font-family:'IBM Plex Sans',sans-serif;color:var(--text);padding:20px 16px 60px;
+  background-image:
+    radial-gradient(ellipse at 12% 8%,rgba(59,130,246,.08) 0%,transparent 40%),
+    radial-gradient(ellipse at 88% 12%,rgba(34,197,94,.06) 0%,transparent 40%),
+    radial-gradient(ellipse at 50% 92%,rgba(249,115,22,.05) 0%,transparent 50%);
+  min-height:100vh
+}
+
+.routebar{max-width:1200px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.routebar-left{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px}
+.routebar-right{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);opacity:.7}
+.crumb-active{color:#3b82f6;font-weight:600}
+
+header.page{text-align:center;margin-bottom:22px;max-width:1200px;margin-left:auto;margin-right:auto}
+.badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#3b82f6;border:1px solid #3b82f6;padding:3px 12px;border-radius:2px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.version-badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);border:1px solid var(--border);padding:2px 8px;border-radius:2px;letter-spacing:1px;margin-left:8px;vertical-align:middle}
+header.page h1{font-size:clamp(17px,2.8vw,28px);font-weight:700;color:var(--white)}
+header.page h1 span{color:#3b82f6}
+header.page p{color:var(--muted);font-size:13px;margin-top:6px;font-family:'IBM Plex Mono',monospace}
+
+.intro-note{max-width:1200px;margin:0 auto 18px;border:1px solid rgba(59,130,246,.28);background:rgba(59,130,246,.05);border-radius:8px;padding:10px 16px;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;line-height:1.7}
+.intro-note strong{color:#3b82f6}
+
+/* Arrow legend */
+.arr-legend{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;margin:0 auto 16px;max-width:1200px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.al-item{display:flex;align-items:center;gap:8px}
+.al-line{width:36px;height:2px;flex-shrink:0}
+.al-line.main{background:#e6edf3}
+.al-line.comex{background:#06b6d4;background:repeating-linear-gradient(90deg,#06b6d4 0,#06b6d4 5px,transparent 5px,transparent 8px)}
+.al-arrow{display:inline-block;font-size:9px}
+
+/* Map */
+.map-outer{max-width:1200px;margin:0 auto}
+.map-svg{width:100%;height:auto;display:block}
+
+/* SVG block interactions */
+.pblock{cursor:pointer}
+.pblock rect.bg{transition:fill-opacity .2s, filter .2s}
+.pblock:hover rect.bg{fill-opacity:.22;filter:brightness(1.3)}
+.pblock:hover .ptitle{fill:#ffffff !important}
+
+/* Stats bar */
+.stats-bar{display:flex;justify-content:center;gap:28px;flex-wrap:wrap;max-width:1200px;margin:28px auto 0;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.stat .num{font-size:21px;font-weight:700;color:var(--white);font-family:'IBM Plex Mono',monospace;display:block;text-align:center}
+.stat .lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:'IBM Plex Mono',monospace;display:block;text-align:center;margin-top:2px}
+
+footer{text-align:center;margin-top:32px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);opacity:.35;letter-spacing:1px}
+</style>
+</head>
+<body>
+
+<div class="routebar">
+  <div class="routebar-left">
+    <span>⬡</span>
+    <span class="crumb-active">MAPA DE PROCESOS</span>
+  </div>
+  <div class="routebar-right">v1.0 · 30 abril 2026 · 10 áreas · 3 niveles</div>
+</div>
+
+<header class="page">
+  <div class="badge">Odoo 17 Enterprise · Proyecto SAP / Odoo Argul 2026</div>
+  <span class="version-badge">10 áreas · 3 niveles</span>
+  <h1>Mapa de Procesos de <span>Argul y Compañía S.A.</span></h1>
+  <p>Berazategui, Buenos Aires · Clic en cada área para explorar sus flujos detallados</p>
+</header>
+
+<div class="intro-note">
+  <strong>⬡ ORIENTACIÓN —</strong>
+  El mapa muestra los 10 procesos del back-office organizados en dos bandas:
+  <strong>Procesos Operativos</strong> (cadena de valor Order-to-Delivery: Ventas → Planificación → Compras/Inventario → Producción),
+  con <strong>COMEX</strong> como proceso paralelo; y
+  <strong>Procesos de Soporte</strong> (Ingeniería, Matricería, Calidad, Contab./Adm./Fin.), que son transversales a toda la cadena operativa.
+  Las flechas indican la dirección del flujo de valor entre áreas.
+</div>
+
+<div class="arr-legend">
+  <div class="al-item">
+    <span style="display:inline-block;width:36px;height:0;border-top:2px solid #e6edf3;position:relative"><span style="position:absolute;right:-4px;top:-5px;font-size:10px;color:#e6edf3">▶</span></span>
+    Flujo operativo principal
+  </div>
+  <div class="al-item">
+    <span style="display:inline-block;width:36px;height:0;border-top:2px dashed #06b6d4;position:relative"><span style="position:absolute;right:-4px;top:-5px;font-size:10px;color:#06b6d4">▶</span></span>
+    COMEX (import. / export.)
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- THE MAP                                                            -->
+<!-- ================================================================ -->
+<div class="map-outer">
+<svg class="map-svg" viewBox="0 0 1160 680" xmlns="http://www.w3.org/2000/svg">
+
+<defs>
+  <!-- White arrow (main flow) -->
+  <marker id="aw" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M1.5 1.5L8.5 5L1.5 8.5" fill="none" stroke="#c8d5e3"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <!-- Cyan arrow (COMEX) -->
+  <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M1.5 1.5L8.5 5L1.5 8.5" fill="none" stroke="#06b6d4"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <!-- Block glow filter -->
+  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+    <feDropShadow dx="0" dy="3" stdDeviation="8" flood-opacity=".35"/>
+  </filter>
+</defs>
+
+<!-- ============================================================ -->
+<!-- ZONE BACKGROUNDS                                              -->
+<!-- ============================================================ -->
+
+<!-- Operativos band -->
+<rect x="16" y="16" width="1128" height="490" rx="12"
+      fill="#161b22" fill-opacity=".55" stroke="#21262d" stroke-width="1"/>
+
+<!-- COMEX lane (dentro de Operativos) -->
+<rect x="950" y="170" width="182" height="200" rx="10"
+      fill="#06b6d4" fill-opacity=".04" stroke="#06b6d4"
+      stroke-width="1.2" stroke-dasharray="5 4" stroke-opacity=".45"/>
+
+<!-- Soporte band -->
+<rect x="16" y="522" width="1128" height="145" rx="12"
+      fill="#161b22" fill-opacity=".4" stroke="#21262d" stroke-width="1"/>
+
+<!-- Zone labels -->
+<text x="578" y="44" text-anchor="middle"
+      font-family="IBM Plex Mono,monospace" font-size="10" font-weight="600"
+      letter-spacing="3" fill="#8b949e" text-transform="uppercase">
+  PROCESOS OPERATIVOS
+</text>
+<text x="578" y="547" text-anchor="middle"
+      font-family="IBM Plex Mono,monospace" font-size="10" font-weight="600"
+      letter-spacing="3" fill="#8b949e">
+  PROCESOS DE SOPORTE · TRANSVERSALES A TODA LA CADENA
+</text>
+<text x="1041" y="188" text-anchor="middle"
+      font-family="IBM Plex Mono,monospace" font-size="8" font-weight="600"
+      letter-spacing="2" fill="#06b6d4" opacity=".7">PROCESO PARALELO</text>
+
+<!-- ============================================================ -->
+<!-- ARROWS — routed to avoid all blocks                           -->
+<!-- ============================================================ -->
+
+<!--
+  BLOCK FOOTPRINTS (for routing reference):
+  Ventas:         x=55–215,  y=220–310
+  Planificación:  x=270–465, y=205–325
+  Compras:        x=510–675, y=110–200
+  Inventario/WMS: x=720–920, y=110–200
+  Producción:     x=545–780, y=345–445
+  COMEX:          x=955–1125, y=185–320
+-->
+
+<!-- 1. Ventas → Planificación (straight horizontal, y=265) -->
+<line x1="215" y1="265" x2="268" y2="265"
+      stroke="#c8d5e3" stroke-width="2" marker-end="url(#aw)"/>
+<text x="242" y="257" text-anchor="middle"
+      font-family="IBM Plex Mono,monospace" font-size="9" fill="#8b949e">PV</text>
+
+<!-- 2. Planificación → Compras
+     From Planificación top-right (465,220) up-right to Compras left (510,155)
+     Clear corridor: between x=465-510, above y=220, below y=110 = ok -->
+<path d="M 465,230 L 510,165"
+      stroke="#c8d5e3" stroke-width="2" fill="none" marker-end="url(#aw)"/>
+<text x="496" y="206" text-anchor="middle"
+      font-family="IBM Plex Mono,monospace" font-size="9" fill="#8b949e"
+      transform="rotate(-50,496,206)">solicitud compra</text>
+
+<!-- 3. Planificación → Producción
+     From Planificación bottom-right (465,325) → curve through clear gap
+     (below Compras y=200, above Producción y=345, x=465-545)
+     → arrive Producción left (545,390) -->
+<path d="M 465,310 C 498,330 528,355 545,385"
+      stroke="#c8d5e3" stroke-width="2" fill="none" marker-end="url(#aw)"/>
+<text x="494" y="356" text-anchor="middle"
+      font-family="IBM Plex Mono,monospace" font-size="9" fill="#8b949e"
+      transform="rotate(60,494,356)">orden fabricación</text>
+
+<!-- 4. Compras → Inventario/WMS (straight horizontal, y=155) -->
+<line x1="675" y1="155" x2="718" y2="155"
+      stroke="#c8d5e3" stroke-width="2" marker-end="url(#aw)"/>
+<text x="697" y="147" text-anchor="middle"
+      font-family="IBM Plex Mono,monospace" font-size="9" fill="#8b949e">recepción MP</text>
+
+<!-- 5. Inventario/WMS → Producción
+     From Inventario bottom-center (820,200) → curve down
+     Clear corridor: x=760-820, y=200-345 (between Compras right x=675 and Producción right x=780)
+     → arrive Producción top-right (750,345) -->
+<path d="M 820,200 C 812,265 790,315 760,345"
+      stroke="#c8d5e3" stroke-width="2" fill="none" marker-end="url(#aw)"/>
+<text x="833" y="280" text-anchor="middle"
+      font-family="IBM Plex Mono,monospace" font-size="9" fill="#8b949e"
+      transform="rotate(75,833,280)">suministro MP</text>
+
+<!-- ============================================================ -->
+<!-- COMEX ARROWS (cyan dashed)                                   -->
+<!-- ============================================================ -->
+
+<!-- 6. COMEX → Compras (importaciones)
+     Route ABOVE Inventario/WMS (top y=110) and above Compras top (y=110)
+     From COMEX top-left (955,215) → arc through y=75 (above all upper blocks) → Compras top-right (660,110)
+     Blocks to avoid: Inventario (720-920, 110-200), Compras (510-675, 110-200)
+     At y=75 we are above both. -->
+<path d="M 955,220 C 880,72 730,72 660,112"
+      stroke="#06b6d4" stroke-width="1.8" fill="none"
+      stroke-dasharray="6 4" marker-end="url(#ac)"/>
+<text x="810" y="68" text-anchor="middle"
+      font-family="IBM Plex Mono,monospace" font-size="9" fill="#06b6d4" opacity=".85">
+  aceros / materiales · importación
+</text>
+
+<!-- 7. Ventas → COMEX (exportaciones)
+     Route BELOW Producción (bottom y=445) through clear space at y=475
+     From Ventas bottom-right (215,310) → arc down then right → COMEX bottom-left (955,310)
+     At y=475 we are below Producción (y=445). Clear. -->
+<path d="M 215,305 C 215,478 955,478 955,312"
+      stroke="#06b6d4" stroke-width="1.8" fill="none"
+      stroke-dasharray="6 4" marker-end="url(#ac)"/>
+<text x="585" y="495" text-anchor="middle"
+      font-family="IBM Plex Mono,monospace" font-size="9" fill="#06b6d4" opacity=".85">
+  exportaciones · comercio exterior
+</text>
+
+<!-- ============================================================ -->
+<!-- PROCESS BLOCKS                                                -->
+<!-- ============================================================ -->
+
+<!-- VENTAS -->
+<g class="pblock" onclick="go('20260430_Ventas_FP_v3_0.html')">
+  <rect class="bg" x="55" y="220" width="160" height="90" rx="9"
+        fill="#3b82f6" fill-opacity=".13" stroke="#3b82f6" stroke-width="1.6"
+        filter="url(#glow)"/>
+  <rect x="55" y="220" width="5" height="90" rx="2.5" fill="#3b82f6"/>
+  <text class="ptitle" x="137" y="261" text-anchor="middle"
+        font-family="IBM Plex Sans,sans-serif" font-size="16" font-weight="700" fill="#bfdbfe">
+    Ventas
+  </text>
+  <text x="137" y="281" text-anchor="middle"
+        font-family="IBM Plex Mono,monospace" font-size="9" fill="#93c5fd" opacity=".8">
+    PEDIDOS · CRM · FACTURACIÓN
+  </text>
+</g>
+
+<!-- PLANIFICACIÓN (hub — slightly larger) -->
+<g class="pblock" onclick="go('20260430_Planificacion_FP_v4_0.html')">
+  <rect class="bg" x="270" y="205" width="195" height="120" rx="9"
+        fill="#22c55e" fill-opacity=".13" stroke="#22c55e" stroke-width="2"
+        filter="url(#glow)"/>
+  <rect x="270" y="205" width="5" height="120" rx="2.5" fill="#22c55e"/>
+  <text class="ptitle" x="367" y="255" text-anchor="middle"
+        font-family="IBM Plex Sans,sans-serif" font-size="16" font-weight="700" fill="#bbf7d0">
+    Planificación
+  </text>
+  <text x="367" y="276" text-anchor="middle"
+        font-family="IBM Plex Mono,monospace" font-size="9" fill="#86efac" opacity=".85">
+    MRP MULTINIVEL · GANTT
+  </text>
+  <text x="367" y="295" text-anchor="middle"
+        font-family="IBM Plex Mono,monospace" font-size="8" fill="#86efac" opacity=".5">
+    hub central de la cadena
+  </text>
+</g>
+
+<!-- COMPRAS -->
+<g class="pblock" onclick="go('20260430_Compras_FP_v3_0.html')">
+  <rect class="bg" x="510" y="110" width="165" height="90" rx="9"
+        fill="#f97316" fill-opacity=".13" stroke="#f97316" stroke-width="1.6"
+        filter="url(#glow)"/>
+  <rect x="510" y="110" width="5" height="90" rx="2.5" fill="#f97316"/>
+  <text class="ptitle" x="592" y="151" text-anchor="middle"
+        font-family="IBM Plex Sans,sans-serif" font-size="16" font-weight="700" fill="#fed7aa">
+    Compras
+  </text>
+  <text x="592" y="172" text-anchor="middle"
+        font-family="IBM Plex Mono,monospace" font-size="9" fill="#fdba74" opacity=".8">
+    OC · PROVEEDORES · SERVICIOS
+  </text>
+</g>
+
+<!-- INVENTARIO / WMS -->
+<g class="pblock" onclick="go('20260430_Inventario_WMS_FP_v3_0.html')">
+  <rect class="bg" x="720" y="110" width="200" height="90" rx="9"
+        fill="#7c3aed" fill-opacity=".13" stroke="#7c3aed" stroke-width="1.6"
+        filter="url(#glow)"/>
+  <rect x="720" y="110" width="5" height="90" rx="2.5" fill="#7c3aed"/>
+  <text class="ptitle" x="820" y="151" text-anchor="middle"
+        font-family="IBM Plex Sans,sans-serif" font-size="16" font-weight="700" fill="#ddd6fe">
+    Inventario / WMS
+  </text>
+  <text x="820" y="172" text-anchor="middle"
+        font-family="IBM Plex Mono,monospace" font-size="9" fill="#c4b5fd" opacity=".8">
+    RECEPCIÓN · STOCK · DESPACHO
+  </text>
+</g>
+
+<!-- PRODUCCIÓN -->
+<g class="pblock" onclick="go('20260430_Produccion_FP_v5_0.html')">
+  <rect class="bg" x="545" y="345" width="235" height="100" rx="9"
+        fill="#f59e0b" fill-opacity=".13" stroke="#f59e0b" stroke-width="1.6"
+        filter="url(#glow)"/>
+  <rect x="545" y="345" width="5" height="100" rx="2.5" fill="#f59e0b"/>
+  <text class="ptitle" x="662" y="388" text-anchor="middle"
+        font-family="IBM Plex Sans,sans-serif" font-size="16" font-weight="700" fill="#fef3c7">
+    Producción
+  </text>
+  <text x="662" y="410" text-anchor="middle"
+        font-family="IBM Plex Mono,monospace" font-size="9" fill="#fcd34d" opacity=".8">
+    40 INYECTORAS · MES · mrp_tool_tracking
+  </text>
+</g>
+
+<!-- COMEX -->
+<g class="pblock" onclick="go('20260430_COMEX_FP_v1_0.html')">
+  <rect class="bg" x="955" y="220" width="170" height="115" rx="10"
+        fill="#06b6d4" fill-opacity=".13" stroke="#06b6d4" stroke-width="2"
+        filter="url(#glow)"/>
+  <rect x="955" y="220" width="5" height="115" rx="2.5" fill="#06b6d4"/>
+  <text class="ptitle" x="1040" y="262" text-anchor="middle"
+        font-family="IBM Plex Sans,sans-serif" font-size="16" font-weight="700" fill="#cffafe">
+    COMEX
+  </text>
+  <text x="1040" y="283" text-anchor="middle"
+        font-family="IBM Plex Mono,monospace" font-size="9" fill="#67e8f9" opacity=".85">
+    COMERCIO EXTERIOR
+  </text>
+  <text x="1040" y="303" text-anchor="middle"
+        font-family="IBM Plex Mono,monospace" font-size="8.5" fill="#67e8f9" opacity=".65">
+    Importaciones · Exportaciones
+  </text>
+</g>
+
+<!-- ============================================================ -->
+<!-- SUPPORT BLOCKS (no arrows — transversal by nature)            -->
+<!-- ============================================================ -->
+
+<!-- INGENIERÍA -->
+<g class="pblock" onclick="go('20260430_Ingenieria_FP_v3_0.html')">
+  <rect class="bg" x="40" y="572" width="205" height="72" rx="8"
+        fill="#8b5cf6" fill-opacity=".10" stroke="#8b5cf6" stroke-width="1.3"
+        filter="url(#glow)"/>
+  <rect x="40" y="572" width="4" height="72" rx="2" fill="#8b5cf6"/>
+  <text class="ptitle" x="142" y="607" text-anchor="middle"
+        font-family="IBM Plex Sans,sans-serif" font-size="15" font-weight="700" fill="#ddd6fe">
+    Ingeniería
+  </text>
+  <text x="142" y="626" text-anchor="middle"
+        font-family="IBM Plex Mono,monospace" font-size="8.5" fill="#c4b5fd" opacity=".75">
+    PRODUCTOS · BOM · RUTAS
+  </text>
+</g>
+
+<!-- MATRICERÍA -->
+<g class="pblock" onclick="go('20260430_Matriceria_FP_v4_0.html')">
+  <rect class="bg" x="265" y="572" width="205" height="72" rx="8"
+        fill="#ec4899" fill-opacity=".10" stroke="#ec4899" stroke-width="1.3"
+        filter="url(#glow)"/>
+  <rect x="265" y="572" width="4" height="72" rx="2" fill="#ec4899"/>
+  <text class="ptitle" x="367" y="607" text-anchor="middle"
+        font-family="IBM Plex Sans,sans-serif" font-size="15" font-weight="700" fill="#fce7f3">
+    Matricería
+  </text>
+  <text x="367" y="626" text-anchor="middle"
+        font-family="IBM Plex Mono,monospace" font-size="8.5" fill="#f9a8d4" opacity=".75">
+    MOLDES · BOM MULTINIVEL
+  </text>
+</g>
+
+<!-- CALIDAD -->
+<g class="pblock" onclick="go('20260430_Calidad_FP_v5_0.html')">
+  <rect class="bg" x="490" y="572" width="205" height="72" rx="8"
+        fill="#ef4444" fill-opacity=".10" stroke="#ef4444" stroke-width="1.3"
+        filter="url(#glow)"/>
+  <rect x="490" y="572" width="4" height="72" rx="2" fill="#ef4444"/>
+  <text class="ptitle" x="592" y="607" text-anchor="middle"
+        font-family="IBM Plex Sans,sans-serif" font-size="15" font-weight="700" fill="#fee2e2">
+    Calidad
+  </text>
+  <text x="592" y="626" text-anchor="middle"
+        font-family="IBM Plex Mono,monospace" font-size="8.5" fill="#fca5a5" opacity=".75">
+    QC RECEPCIÓN · QC PRODUCCIÓN · RMA
+  </text>
+</g>
+
+<!-- CONTABILIDAD / ADM / FINANZAS -->
+<g class="pblock" onclick="go('20260430_Contabilidad_Adm_Finanzas_FP_v5_0.html')">
+  <rect class="bg" x="715" y="572" width="430" height="72" rx="8"
+        fill="#10b981" fill-opacity=".10" stroke="#10b981" stroke-width="1.3"
+        filter="url(#glow)"/>
+  <rect x="715" y="572" width="4" height="72" rx="2" fill="#10b981"/>
+  <text class="ptitle" x="929" y="607" text-anchor="middle"
+        font-family="IBM Plex Sans,sans-serif" font-size="15" font-weight="700" fill="#d1fae5">
+    Contabilidad · Administración · Finanzas
+  </text>
+  <text x="929" y="626" text-anchor="middle"
+        font-family="IBM Plex Mono,monospace" font-size="8.5" fill="#6ee7b7" opacity=".75">
+    IMPUESTOS · TESORERÍA · COSTOS · PAGOS · FACTURACIÓN
+  </text>
+</g>
+
+</svg>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><span class="num">10</span><span class="lbl">Áreas de proceso</span></div>
+  <div class="stat"><span class="num">50+</span><span class="lbl">Procesos documentados</span></div>
+  <div class="stat"><span class="num">20</span><span class="lbl">Documentos MF + FP</span></div>
+  <div class="stat"><span class="num">3</span><span class="lbl">Niveles de navegación</span></div>
+</div>
+
+<footer>ODOO 17 ENTERPRISE · MAPA DE PROCESOS · ARGUL Y COMPAÑÍA S.A. · PROYECTO SAP/ODOO ARGUL 2026 · V1.0</footer>
+
+<script>
+function go(f){window.location.href=f}
+</script>
+</body>
+</html>

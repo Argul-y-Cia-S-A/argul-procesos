@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Producción — Procesos de Negocio | Odoo 17 Enterprise</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--border:#21262d;--text:#e6edf3;--muted:#8b949e;--white:#fff;
+  --pro:#8b5cf6;--cal:#22c55e;--pla:#3b82f6;--dep:#eab308;--sis:#6366f1;--ing:#f97316;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);font-family:'IBM Plex Sans',sans-serif;color:var(--text);padding:20px 16px 60px;
+  background-image:
+    radial-gradient(ellipse at 10% 5%,rgba(139,92,246,.10) 0%,transparent 40%),
+    radial-gradient(ellipse at 90% 15%,rgba(34,197,94,.07) 0%,transparent 40%),
+    radial-gradient(ellipse at 50% 90%,rgba(234,179,8,.05) 0%,transparent 50%),
+    radial-gradient(ellipse at 75% 55%,rgba(99,102,241,.04) 0%,transparent 40%);
+  min-height:100vh;
+}
+
+.routebar{max-width:1700px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.routebar-left{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px}
+.routebar a{color:var(--pro);text-decoration:none;border:1px solid rgba(139,92,246,.4);padding:4px 10px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:11px;transition:all .15s}
+.routebar a:hover{background:rgba(139,92,246,.1);border-color:var(--pro)}
+.routebar-right{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);opacity:.7}
+.crumb-sep{color:var(--muted);opacity:.4}
+.crumb-active{color:var(--pro);font-weight:600}
+
+header.page{text-align:center;margin-bottom:24px;max-width:1700px;margin-left:auto;margin-right:auto}
+.badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--pro);border:1px solid var(--pro);padding:3px 12px;border-radius:2px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.version-badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);border:1px solid var(--border);padding:2px 8px;border-radius:2px;letter-spacing:1px;margin-left:8px;vertical-align:middle}
+header.page h1{font-size:clamp(18px,3vw,30px);font-weight:700;color:var(--white)}
+header.page h1 span.pro{color:var(--pro)}
+header.page h1 span.cal{color:var(--cal)}
+header.page p{color:var(--muted);font-size:13px;margin-top:6px;font-family:'IBM Plex Mono',monospace}
+
+.legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:0 auto 22px;max-width:1100px}
+.legend-item{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+.intro-note{
+  max-width:900px;margin:0 auto 22px;
+  border:1px solid rgba(139,92,246,.30);background:rgba(139,92,246,.06);
+  border-radius:8px;padding:11px 16px;
+  font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;line-height:1.7;
+}
+.intro-note strong{color:var(--pro)}
+.arch-note{
+  max-width:900px;margin:0 auto 24px;
+  border:1px solid rgba(234,179,8,.35);background:rgba(234,179,8,.07);
+  border-radius:8px;padding:11px 16px;
+  font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;line-height:1.7;
+}
+.arch-note strong{color:var(--dep)}
+
+.overview-wrap{max-width:1700px;margin:0 auto}
+.section-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:3px;margin:28px 0 14px;text-align:center}
+
+.macro-flow{
+  display:flex;align-items:stretch;justify-content:center;gap:6px;flex-wrap:wrap;
+  max-width:1700px;margin:0 auto 20px;padding:18px 14px;
+  border:1px solid var(--border);background:var(--surface);border-radius:12px;
+}
+.macro-step{
+  position:relative;flex:1;min-width:120px;max-width:180px;
+  padding:11px 10px;border:1px solid;border-radius:8px;
+  cursor:pointer;transition:all .2s;text-decoration:none;color:inherit;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.macro-step:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.macro-step.pm{border-color:rgba(139,92,246,.5);background:rgba(139,92,246,.07)}
+.macro-step.pm:hover{background:rgba(139,92,246,.14);border-color:var(--pro)}
+.macro-step.ps{border-color:rgba(99,102,241,.5);background:rgba(99,102,241,.07)}
+.macro-step.ps:hover{background:rgba(99,102,241,.14);border-color:var(--sis)}
+.macro-step.po{border-color:rgba(234,179,8,.5);background:rgba(234,179,8,.07)}
+.macro-step.po:hover{background:rgba(234,179,8,.14);border-color:var(--dep)}
+.macro-step.cm{border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.07)}
+.macro-step.cm:hover{background:rgba(34,197,94,.14);border-color:var(--cal)}
+
+.macro-code{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1.5px;margin-bottom:5px}
+.macro-step.pm .macro-code{color:var(--pro)}
+.macro-step.ps .macro-code{color:var(--sis)}
+.macro-step.po .macro-code{color:var(--dep)}
+.macro-step.cm .macro-code{color:var(--cal)}
+.macro-name{font-size:11px;font-weight:700;color:var(--white);line-height:1.3}
+.macro-hint{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);margin-top:6px;opacity:.75}
+.macro-arrow{display:flex;align-items:center;color:var(--muted);font-size:16px;opacity:.5;user-select:none}
+
+.part-divider{
+  max-width:1700px;margin:24px auto 10px;text-align:center;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+}
+.part-divider.part-pro{color:var(--pro);border-color:rgba(139,92,246,.3)}
+.part-divider.part-cal{color:var(--cal);border-color:rgba(34,197,94,.3)}
+
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;max-width:1700px;margin:0 auto}
+.pcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 16px 14px;cursor:pointer;text-decoration:none;color:inherit;transition:all .2s;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.pcard::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%}
+.pcard.pm::before{background:var(--pro)}
+.pcard.ps::before{background:var(--sis)}
+.pcard.po::before{background:var(--dep)}
+.pcard.cm::before{background:var(--cal)}
+.pcard:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.pcard.pm:hover{border-color:var(--pro)}
+.pcard.ps:hover{border-color:var(--sis)}
+.pcard.po:hover{border-color:var(--dep)}
+.pcard.cm:hover{border-color:var(--cal)}
+
+.pcard-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;padding-left:8px}
+.pcard-code{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:1.5px}
+.pcard.pm .pcard-code{color:var(--pro)}
+.pcard.ps .pcard-code{color:var(--sis)}
+.pcard.po .pcard-code{color:var(--dep)}
+.pcard.cm .pcard-code{color:var(--cal)}
+.pcard-type{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);padding:1px 6px;border-radius:2px;border:1px solid var(--border);text-transform:uppercase;letter-spacing:1px}
+.pcard-title{font-size:14px;font-weight:700;color:var(--white);margin-bottom:10px;line-height:1.35;padding-left:8px}
+.pcard-desc{font-size:11.5px;color:var(--muted);line-height:1.55;margin-bottom:12px;padding-left:8px;flex:1}
+.pcard-desc em{color:var(--text);font-style:normal;font-weight:600}
+
+.pcard-io{padding:8px 8px 0;border-top:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.6}
+.io-row{display:flex;gap:6px;margin-bottom:3px;align-items:flex-start}
+.io-label{color:var(--pro);font-weight:600;flex-shrink:0;min-width:26px}
+.io-label.out{color:var(--dep)}
+.io-text{color:var(--muted)}
+
+.pcard-meta{display:flex;flex-wrap:wrap;gap:8px;padding:8px 8px 0;border-top:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.meta-group{display:flex;align-items:center;gap:6px}
+.meta-label{opacity:.65}
+.meta-value{color:var(--text);font-weight:600}
+
+.pcard-lanes{display:flex;gap:4px;padding:8px 8px 0;flex-wrap:wrap}
+.lane-chip{display:inline-flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;padding:2px 6px;border-radius:2px;border:1px solid}
+.lane-chip.pro{color:var(--pro);border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.08)}
+.lane-chip.cal{color:var(--cal);border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.08)}
+.lane-chip.pla{color:var(--pla);border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.08)}
+.lane-chip.dep{color:var(--dep);border-color:rgba(234,179,8,.4);background:rgba(234,179,8,.08)}
+.lane-chip.sis{color:var(--sis);border-color:rgba(99,102,241,.4);background:rgba(99,102,241,.08)}
+.lane-chip.ing{color:var(--ing);border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.08)}
+
+.pcard-cta{margin-top:10px;padding:0 8px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px}
+.pcard.pm .pcard-cta{color:var(--pro)}
+.pcard.ps .pcard-cta{color:var(--sis)}
+.pcard.po .pcard-cta{color:var(--dep)}
+.pcard.cm .pcard-cta{color:var(--cal)}
+
+/* PROCESS DIAGRAM */
+.diagram{max-width:1700px;margin:0 auto;overflow-x:auto}
+.diagram-rel{position:relative}
+.sw{display:grid;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+
+.hdr{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 3px;gap:2px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid;text-align:center;line-height:1.3}
+.hdr-corner{background:var(--surface);border-bottom:2px solid var(--border);border-right:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.hdr-pro{background:rgba(139,92,246,.12);color:var(--pro);border-color:var(--pro);border-right:1px solid var(--border)}
+.hdr-cal{background:rgba(34,197,94,.10); color:var(--cal); border-color:var(--cal); border-right:1px solid var(--border)}
+.hdr-pla{background:rgba(59,130,246,.12);color:var(--pla); border-color:var(--pla); border-right:1px solid var(--border)}
+.hdr-dep{background:rgba(234,179,8,.10); color:var(--dep); border-color:var(--dep); border-right:1px solid var(--border)}
+.hdr-sis{background:rgba(99,102,241,.12);color:var(--sis); border-color:var(--sis); border-right:1px solid var(--border)}
+.hdr-ing{background:rgba(249,115,22,.12);color:var(--ing); border-color:var(--ing); border-right:1px solid var(--border)}
+.hdr-last{border-right:none}
+
+.sl{background:var(--surface);border-right:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 3px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);line-height:1.4}
+.sl strong{font-size:15px;font-weight:700;display:block;margin-bottom:2px}
+
+.lc{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:10px 7px;display:flex;align-items:center;justify-content:center;min-height:115px;flex-direction:column;gap:6px}
+.lc.pro-bg{background:rgba(139,92,246,.03)}
+.lc.cal-bg{background:rgba(34,197,94,.03)}
+.lc.pla-bg{background:rgba(59,130,246,.03)}
+.lc.dep-bg{background:rgba(234,179,8,.03)}
+.lc.sis-bg{background:rgba(99,102,241,.03)}
+.lc.ing-bg{background:rgba(249,115,22,.03)}
+.lc.last-col{border-right:none}
+
+.ar{border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;height:30px;position:relative}
+.ar.pro-bg{background:rgba(139,92,246,.02);border-right:1px solid var(--border)}
+.ar.cal-bg{background:rgba(34,197,94,.02); border-right:1px solid var(--border)}
+.ar.pla-bg{background:rgba(59,130,246,.02);border-right:1px solid var(--border)}
+.ar.dep-bg{background:rgba(234,179,8,.02); border-right:1px solid var(--border)}
+.ar.sis-bg{background:rgba(99,102,241,.02);border-right:1px solid var(--border)}
+.ar.ing-bg{background:rgba(249,115,22,.02);border-right:1px solid var(--border)}
+.ar.last-col{border-right:none}
+.ar-corner{background:var(--surface);border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+
+.varr{display:flex;flex-direction:column;align-items:center;height:30px}
+.varr .sh{width:2px;flex:1}
+.varr .hd{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent}
+.varr.pro .sh{background:var(--pro)} .varr.pro .hd{border-top:7px solid var(--pro)}
+.varr.cal .sh{background:var(--cal)} .varr.cal .hd{border-top:7px solid var(--cal)}
+.varr.pla .sh{background:var(--pla)} .varr.pla .hd{border-top:7px solid var(--pla)}
+.varr.dep .sh{background:var(--dep)} .varr.dep .hd{border-top:7px solid var(--dep)}
+.varr.sis .sh{background:var(--sis)} .varr.sis .hd{border-top:7px solid var(--sis)}
+.varr.ing .sh{background:var(--ing)} .varr.ing .hd{border-top:7px solid var(--ing)}
+
+.no-bot{border-bottom:none!important}
+
+.divider-row{grid-column:1/-1;background:rgba(139,92,246,.08);border-top:1px dashed rgba(139,92,246,.4);border-bottom:1px dashed rgba(139,92,246,.4);padding:6px 14px;display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;color:var(--pro);letter-spacing:1.5px;text-transform:uppercase}
+.divider-row::before{content:'⬡';font-size:11px}
+.divider-row.phys{background:rgba(234,179,8,.08);border-top-color:rgba(234,179,8,.4);border-bottom-color:rgba(234,179,8,.4);color:var(--dep)}
+.divider-row.phys::before{content:'⇄'}
+.divider-row.end{background:rgba(34,197,94,.06);border-top-color:rgba(34,197,94,.3);border-bottom-color:rgba(34,197,94,.3);color:var(--cal)}
+.divider-row.end::before{content:'▶'}
+.divider-row.loop{background:rgba(99,102,241,.07);border-top-color:rgba(99,102,241,.4);border-bottom-color:rgba(99,102,241,.4);color:var(--sis)}
+.divider-row.loop::before{content:'↻'}
+.divider-row.warn{background:rgba(249,115,22,.07);border-top-color:rgba(249,115,22,.4);border-bottom-color:rgba(249,115,22,.4);color:var(--ing)}
+.divider-row.warn::before{content:'⚠'}
+
+.card{width:100%;border-radius:7px;padding:10px 10px;border:1px solid;animation:popIn .4s ease both}
+@keyframes popIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.card.pro  {border-color:rgba(139,92,246,.55);background:rgba(139,92,246,.10)}
+.card.pro2 {border-color:rgba(139,92,246,.4); background:rgba(139,92,246,.07)}
+.card.pro3 {border-color:rgba(139,92,246,.3); background:rgba(139,92,246,.05)}
+.card.cal  {border-color:rgba(34,197,94,.5);  background:rgba(34,197,94,.10)}
+.card.cal2 {border-color:rgba(34,197,94,.4);  background:rgba(34,197,94,.07)}
+.card.pla  {border-color:rgba(59,130,246,.55);background:rgba(59,130,246,.10)}
+.card.pla2 {border-color:rgba(59,130,246,.4); background:rgba(59,130,246,.07)}
+.card.dep  {border-color:rgba(234,179,8,.5);  background:rgba(234,179,8,.10)}
+.card.dep2 {border-color:rgba(234,179,8,.4);  background:rgba(234,179,8,.07)}
+.card.sis  {border-color:rgba(99,102,241,.55);background:rgba(99,102,241,.10)}
+.card.sis2 {border-color:rgba(99,102,241,.4); background:rgba(99,102,241,.07)}
+.card.ing  {border-color:rgba(249,115,22,.5); background:rgba(249,115,22,.10)}
+.card.ing2 {border-color:rgba(249,115,22,.4); background:rgba(249,115,22,.07)}
+
+.card-title{font-size:10.5px;font-weight:700;color:var(--white);margin-bottom:4px;line-height:1.3}
+.card-desc {font-size:9.5px;color:var(--muted);line-height:1.5}
+.card-desc em{color:var(--text);font-style:normal;font-weight:600}
+.card-tags {display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.ctag{display:inline-block;padding:2px 5px;border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:8px;background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--border)}
+.cite{display:block;font-style:italic;color:var(--text);background:rgba(234,179,8,.08);padding:5px 7px;border-left:2px solid var(--dep);border-radius:3px;font-size:8.5px;margin-top:6px;line-height:1.5}
+.auto-pill{margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;padding:4px 8px;border-radius:4px;line-height:1.4}
+.auto-pro{background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.35);color:var(--pro)}
+.auto-cal{background:rgba(34,197,94,.10);border:1px solid rgba(34,197,94,.35);color:var(--cal)}
+.auto-dep{background:rgba(234,179,8,.10);border:1px solid rgba(234,179,8,.35);color:var(--dep)}
+.auto-sis{background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.35);color:var(--sis)}
+.auto-ing{background:rgba(249,115,22,.10);border:1px solid rgba(249,115,22,.35);color:var(--ing)}
+.auto-pla{background:rgba(59,130,246,.10);border:1px solid rgba(59,130,246,.35);color:var(--pla)}
+
+.ov{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5}
+
+footer{max-width:1700px;margin:40px auto 0;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);opacity:.5;letter-spacing:2px;text-transform:uppercase;padding-top:20px;border-top:1px solid var(--border)}
+
+/* FEATURES BAR */
+.features-bar{position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:900;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;width:165px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.features-bar.collapsed .toggle-group{display:none}
+.toggle-header{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:2px 4px;border-radius:3px;transition:background .2s;user-select:none;letter-spacing:1px}
+.toggle-header:hover{background:rgba(139,92,246,.08)}
+.toggle-group{margin-top:8px}
+.toggle-item{display:flex;align-items:center;gap:8px;padding:5px 4px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--muted);cursor:pointer;border-radius:3px;transition:all .2s;user-select:none}
+.toggle-item:hover{background:rgba(139,92,246,.08);color:var(--text)}
+.toggle-item.active{color:var(--pro)}
+.toggle-switch{width:14px;height:14px;border:1px solid var(--border);border-radius:3px;position:relative;transition:all .2s;flex-shrink:0}
+.toggle-item.active .toggle-switch{background:var(--pro);border-color:var(--pro)}
+.toggle-item.active .toggle-switch::after{content:'✓';position:absolute;top:-3px;left:1px;font-size:10px;color:var(--bg)}
+
+.analytics-panel{position:fixed;right:200px;top:50%;transform:translateY(-50%);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;width:280px;max-height:65vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:850;display:none}
+.analytics-panel.open{display:block}
+.panel-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--pro);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.stat-group{margin-bottom:14px}
+.stat-lbl{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.stat-val{font-size:20px;font-weight:700;color:var(--white);font-family:'IBM Plex Mono',monospace}
+.stat-det{font-size:9px;color:var(--muted);margin-top:2px;font-family:'IBM Plex Mono',monospace;line-height:1.5}
+.heatmap-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.hm-cell{padding:6px 10px;border-radius:4px;font-size:9px;font-weight:600;font-family:'IBM Plex Mono',monospace;cursor:pointer;transition:transform .2s;text-align:center}
+.hm-cell:hover{transform:scale(1.05)}
+.hm-1{background:rgba(139,92,246,.2);color:var(--pro)}
+.hm-2{background:rgba(99,102,241,.25);color:var(--sis)}
+.hm-3{background:rgba(249,115,22,.25);color:var(--ing)}
+.hm-4{background:rgba(234,179,8,.25);color:var(--dep)}
+.hm-5{background:rgba(34,197,94,.35);color:var(--cal)}
+
+body.pres-mode .routebar,body.pres-mode .features-bar,body.pres-mode .analytics-panel{display:none!important}
+body.pres-mode{padding:0}
+body.pres-mode .diagram{max-width:none;padding:20px}
+.pres-controls{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 16px;z-index:1001;gap:10px;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+body.pres-mode .pres-controls{display:flex}
+.pres-btn{background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.5);color:var(--pro);padding:6px 14px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;cursor:pointer;transition:all .2s;letter-spacing:1px}
+.pres-btn:hover{background:rgba(139,92,246,.25);color:var(--white)}
+.pres-info{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);padding:0 14px;border-left:1px solid var(--border);border-right:1px solid var(--border)}
+
+.card.dimmed{opacity:.18;pointer-events:none}
+.card.lit{box-shadow:0 0 10px currentColor;outline:1px solid currentColor}
+</style>
+</head>
+<body>
+
+<div class="routebar" id="routebar"></div>
+<div id="app"></div>
+<footer>ODOO 17 ENTERPRISE · PRODUCCIÓN Y GESTIÓN DE CALIDAD · ARGUL Y COMPAÑÍA S.A. · PROYECTO SAP/ODOO ARGUL 2026 · v5.0 · alineado con MF Producción y Calidad v3.1</footer>
+
+<script>
+/* ================================================================= */
+/* LANE DEFINITIONS                                                   */
+/* ================================================================= */
+const LANES = {
+  pro: { name: 'PRODUCCIÓN',       icon: '🏭', subtitle: 'supervisores · Natalia Cascardo',              color: 'pro', short: 'Prod.' },
+  cal: { name: 'CALIDAD',          icon: '🔬', subtitle: 'inspectores · Natalia Cascardo',               color: 'cal', short: 'Cal.'  },
+  pla: { name: 'PLANIFICACIÓN',    icon: '📊', subtitle: 'Victoria Gini · Customer Service',             color: 'pla', short: 'Plan.' },
+  dep: { name: 'DEPÓSITO / WMS',   icon: '📦', subtitle: 'Gustavo · Hangel · operarios',                 color: 'dep', short: 'Dep.'  },
+  sis: { name: 'SISTEMA ODOO',     icon: '⚙',  subtitle: 'automático · MRP · mrp_tool_tracking',         color: 'sis', short: 'Sis.'  },
+  ing: { name: 'ING. / MATRICERÍA',icon: '🔧', subtitle: 'Miguel Caro · equipo técnico · Gustavo Adorno',color: 'ing', short: 'Ing.'  }
+};
+
+/* ================================================================= */
+/* PROCESS DEFINITIONS                                                */
+/* ================================================================= */
+const PROCESSES = {
+
+  /* ============================================================= */
+  /* P-PRO-1 Estructura Productiva                                 */
+  /* ============================================================= */
+  ppro1: {
+    code: 'P-PRO-1',
+    name: 'Estructura Productiva — Rutas, BOM y Centros de Trabajo',
+    shortName: 'Estructura Productiva',
+    type: 'Configuración',
+    pcls: 'ps',
+    rqRange: 'RQ-PRO-01 a 07, RQ-PRO-28',
+    rqCount: 8,
+    description: 'Configuración de la estructura base de producción: rutas de fabricación, BOM, operaciones, centros de trabajo (40 inyectoras + sopladoras) y gestión de moldes como herramientas. La generación de OPs la hace <em>Planificación</em>; Producción ejecuta desde la confirmación.',
+    shortDesc: 'Rutas · BOM · 40 inyectoras · sopladoras · moldes · mrp_tool_tracking',
+    inputs: 'Datos maestros SAP (BOM, rutas, tiempos) · registro físico de moldes · configuración de inyectoras',
+    outputs: 'BOM activas · rutas configuradas · centros de trabajo · maestro de moldes gestionado',
+    lanes: ['ing','pro','pla','sis'],
+    intro: 'Ingeniería (Miguel Caro) mantiene el maestro de rutas, BOM y operaciones. Las 40 inyectoras se configuran como centros de trabajo independientes replicando la convención SAP. La sesión 2 incorporó las sopladoras como centros de trabajo adicionales (RQ-PRO-28). Los moldes se modelan como herramientas gestionadas con el módulo <em>mrp_tool_tracking</em> (implementado en Libus). La combinación molde + producto define el ciclo real. Los RQ que condicionan la generación de OPs y la carga del Gantt deben validarse con Planificación (Victoria Gini).',
+    archNote: 'INPUTS — datos SAP: BOM, rutas, tiempos estándar, cavidades, centros de trabajo · registro físico de moldes de Matricería. OUTPUTS — BOM activas con parámetros migrados → alimentan MRP (MF Planificación) · centros de trabajo configurados → Gantt · maestro de moldes gestionado (mrp_tool_tracking). DEV — mrp_tool_tracking (MF Producción/Planificación). REFERENCIAS CRUZADAS — MF Planificación RQ-PLA-05 a 09 · MF Ingeniería RQ-ING-10.',
+    steps: [
+      { n: '01', label: 'Rutas de fab.', lane: 'ing', variant: 'ing',
+        title: 'Ruta de fabricación por producto (Ingeniería)',
+        desc: 'Cada producto tiene una ruta de fabricación con operaciones definidas por Ingeniería. En Odoo cada operación describe un paso del proceso y tiene un centro de trabajo asociado. La forma en que Planificación genera las OPs con la ruta se valida en el MF Planificación.',
+        tags: ['RQ-PRO-01', 'estándar', 'ref. MF Planificación RQ-PLA-05/06']
+      },
+      { n: '02', label: 'Grabado láser', lane: 'ing', variant: 'ing2',
+        title: 'Operación de grabado láser incluida en la ruta',
+        desc: 'Para productos que requieren grabado, la operación se incluye como paso en la ruta. Las instrucciones de grabado (código y especificación) aparecen en la work order. Ingeniería mantiene las especificaciones en Odoo.',
+        tags: ['RQ-PRO-02', 'estándar', 'carga pre go-live por Ingeniería']
+      },
+      { n: '03', label: '40 inyectoras', lane: 'sis', variant: 'sis',
+        title: '40 inyectoras como centros de trabajo independientes',
+        desc: 'Las 40 inyectoras se configuran en Odoo con código y nombre SAP (8 alfanuméricos + posición en planta). Cada una con horario de trabajo diferenciado. Producción visualiza el Gantt resultante. La carga la genera Planificación.',
+        tags: ['RQ-PRO-03', 'estándar', 'migración con Ingeniería (Miguel Caro)']
+      },
+      { n: '04', label: 'Sopladoras', lane: 'sis', variant: 'sis2',
+        title: 'Sopladoras como centros de trabajo',
+        desc: 'Incorporadas en sesión 2 a pedido de Natalia. Se configuran como centros de trabajo independientes con horarios y operaciones asignadas. Producción se notifica igual que inyectoras.',
+        tags: ['RQ-PRO-28', 'gap', 'detalle de configuración a relevar con Natalia']
+      },
+      { divider: 'MOLDES COMO RECURSO GESTIONADO — mrp_tool_tracking' },
+      { n: '05', label: 'Ciclo + cavidades', lane: 'sis', variant: 'sis',
+        title: 'Ciclo estándar y cavidades por molde',
+        desc: 'El molde se modela como operación en el maestro de moldes (<em>mrp_tool_tracking</em>): ciclo estándar (segundos), cavidades, unidades/hora calculadas. La combinación molde + producto define el ciclo real. El ciclo es editable (se actualiza periódicamente).',
+        tags: ['RQ-PRO-04', 'DEV mrp_tool_tracking', 'implementado en Libus'],
+        pill: { color: 'pro', text: '🔧 mrp_tool_tracking · implementado en Libus · verificar adaptación para Argul' }
+      },
+      { n: '06', label: 'Moldes por producto', lane: 'pla', variant: 'pla',
+        title: 'Múltiples moldes posibles por producto',
+        desc: 'Un mismo producto puede fabricarse con distintos moldes. La BOM incluye todos los moldes compatibles como operaciones alternativas. Planificación selecciona el molde al generar la OP. Ya implementado en Libus.',
+        tags: ['RQ-PRO-05', 'estándar', 'validar con MF Planificación RQ-PLA-06']
+      },
+      { n: '07', label: 'Inyectoras por molde', lane: 'sis', variant: 'sis2',
+        title: 'Restricción de inyectoras compatibles por molde',
+        desc: 'Cada molde tiene definidas las inyectoras compatibles (grupos de tonelaje: 150T, 350T). El sistema sugiere o restringe la asignación. En Libus la operación solo permite una máquina por molde; el MF Planificación identificó el gap de reasignación automática.',
+        tags: ['RQ-PRO-06', 'DEV mrp_tool_tracking', 'gap de reasignación · pendiente de prueba']
+      },
+      { n: '08', label: 'Subproductos', lane: 'pro', variant: 'pro',
+        title: 'Molde con dos salidas de producto (subproductos)',
+        desc: 'Algunos moldes generan dos códigos simultáneamente. Odoo 17 soporta subproductos nativamente (<em>mrp_byproduct</em> en core). Una misma OF declara dos productos desde la BOM. La App MES debe ver ambos desde la misma orden.',
+        tags: ['RQ-PRO-07', 'estándar · mrp_byproduct nativo', 'coordinar prueba con Gustavo (App MES)']
+      }
+    ],
+    arrows: [
+      { from: 0, to: 2, lane: 'sis', label: 'ruta → centro de trabajo' },
+      { from: 4, to: 5, lane: 'pla', label: 'molde → BOM' }
+    ]
+  },
+
+  /* ============================================================= */
+  /* P-PRO-2 Disponibilidad de Moldes                              */
+  /* ============================================================= */
+  ppro2: {
+    code: 'P-PRO-2',
+    name: 'Gestión de Disponibilidad de Moldes',
+    shortName: 'Disponibilidad Moldes',
+    type: 'Operativo',
+    pcls: 'po',
+    rqRange: 'RQ-PRO-08 a 10',
+    rqCount: 3,
+    description: 'Control de disponibilidad de moldes como recurso de producción. Un molde bloqueado en Matricería no puede asignarse a una nueva orden. La confirmación de la OP (no su creación en borrador) debe impedirse si el molde está bloqueado.',
+    shortDesc: 'Bloqueo molde · liberación · historial reparaciones (Etapa 2)',
+    inputs: 'Estado del molde en Matricería · solicitud de reparación',
+    outputs: 'Molde disponible/bloqueado → impacto en Gantt y confirmación de OP',
+    lanes: ['ing','pro','pla','sis'],
+    intro: 'Matricería es el cuello de botella habitual de la planta. El bloqueo en SAP existe, lo ejecuta Matricería, y se usa en casos que lo requieren. El requerimiento para Odoo es el mismo, con el añadido de que el bloqueo impide la CONFIRMACIÓN de la orden (no su creación en borrador). El historial de reparaciones queda en Etapa 2 (integración con Don PC).',
+    archNote: 'INPUTS — estado del molde (disponible/bloqueado) gestionado por Matricería. OUTPUTS — molde disponible → Planificación puede confirmar OP · molde bloqueado → no figura como recurso en Gantt. DEV — mrp_tool_tracking (atributo de disponibilidad). REFERENCIAS — MF Planificación (Gantt). Etapa 2: integración con Don PC (Fabián Olivera).',
+    steps: [
+      { n: '01', label: 'Bloqueo molde', lane: 'ing', variant: 'ing',
+        title: 'Matricería bloquea molde enviado a reparación',
+        desc: 'Cuando Matricería bloquea un molde, lo marca como «no disponible» en Odoo. La creación de la OP en borrador está permitida, pero la <em>confirmación</em> debe impedirse. El molde no figura como recurso disponible en el Gantt.',
+        tags: ['RQ-PRO-08', 'DEV mrp_tool_tracking', 'validación de confirmación pendiente con Franco'],
+        pill: { color: 'pro', text: '🔧 mrp_tool_tracking · atributo de disponibilidad · validación de confirmación OP' }
+      },
+      { n: '02', label: 'Liberación', lane: 'ing', variant: 'ing2',
+        title: 'Matricería libera molde reparado',
+        desc: 'Matricería marca el molde como «disponible». Planificación puede confirmar OPs con ese molde. El contador de golpes desde el último mantenimiento se reinicia al liberar (ver MF Planificación RQ-PLA-09).',
+        tags: ['RQ-PRO-09', 'DEV mrp_tool_tracking', 'perfil de usuario Matricería a definir']
+      },
+      { n: '03', label: 'Historial', lane: 'ing', variant: 'ing2',
+        title: 'Historial de reparaciones de molde (Etapa 2)',
+        desc: 'Hoy el historial está en Don PC (sistema propietario de Matricería). En Etapa 2: solicitud de reparación, detalle del defecto, muestras e historial completo compartidos en Odoo. En Etapa 1 solo se registra estado disponible/no disponible.',
+        tags: ['RQ-PRO-10', 'fuera de alcance Etapa 1', 'Etapa 2 · Don PC']
+      }
+    ],
+    arrows: [
+      { from: 0, to: 1, lane: 'ing', label: 'reparación → liberación' }
+    ]
+  },
+
+  /* ============================================================= */
+  /* P-PRO-3 Ejecución de Órdenes de Fabricación                   */
+  /* ============================================================= */
+  ppro3: {
+    code: 'P-PRO-3',
+    name: 'Ejecución de Órdenes de Fabricación',
+    shortName: 'Ejecución OFs',
+    type: 'Principal',
+    pcls: 'pm',
+    rqRange: 'RQ-PRO-11 a 15',
+    rqCount: 5,
+    description: 'Ejecución en planta de las órdenes lanzadas por Planificación: Gantt, ejecución con molde, registro en cajas/unidades y declaración de <em>Producto No Conforme</em>. El scrap de arranque, regulación y barrido NO se declara en Etapa 1. El wizard <em>DEV-PRO-02</em> modela exclusivamente Producto No Conforme.',
+    shortDesc: 'Gantt · cajas/unidades · Producto No Conforme · DEV-PRO-02',
+    inputs: 'OPs confirmadas por Planificación · Gantt de carga por inyectora',
+    outputs: 'Producción en curso · declaración de Producto No Conforme → scrap + etiqueta A4',
+    lanes: ['pro','cal','sis'],
+    intro: 'Aclaraciones clave de la sesión 2: (a) el scrap de arranque, regulación y barrido NO se declara en SAP y se mantiene fuera de alcance en Etapa 1; (b) el Producto No Conforme detectado antes de notificar tiene una lógica particular: no reduce el pendiente de la orden pero sí da de baja los materiales consumidos. Esta lógica difiere del comportamiento nativo de Odoo y es el núcleo del wizard DEV-PRO-02.',
+    archNote: 'INPUTS — mrp.production confirmadas · Gantt por centro de trabajo. OUTPUTS — producción en curso · scrap por equivalencia (DEV-PRO-02) → ubicación virtual de scrap + etiqueta A4 (DEV-CAL-01). DEV — DEV-PRO-02: wizard de Producto No Conforme. REFERENCIAS CRUZADAS — DEV-CAL-01 (etiqueta A4) · DEV-CAL-02 (misma lógica desde Calidad).',
+    steps: [
+      { n: '01', label: 'Gantt de carga', lane: 'sis', variant: 'sis',
+        title: 'Gantt de carga de máquinas (Producción consume)',
+        desc: 'Odoo genera el Gantt por centro de trabajo con fechas calculadas (ciclo, cavidades, cantidad). Los supervisores visualizan la secuencia de órdenes por inyectora. La planilla auxiliar deja de usarse. La carga la genera Planificación.',
+        tags: ['RQ-PRO-11', 'estándar', 'Producción consume la vista']
+      },
+      { n: '02', label: 'Cajas / unidades', lane: 'pro', variant: 'pro',
+        title: 'Unidad de medida: cajas y unidades',
+        desc: 'Las órdenes se lanzan y notifican en cajas (UMA) o unidades con conversión automática. Funcionalidad ya implementada en Libus.',
+        tags: ['RQ-PRO-12', 'estándar', 'verificar configuración UMA Libus → Argul']
+      },
+      { divider: 'PRODUCTO NO CONFORME — wizard DEV-PRO-02' },
+      { n: '03', label: 'Producto No Conforme', lane: 'pro', variant: 'pro',
+        title: 'Declaración de Producto No Conforme durante la orden',
+        desc: 'El supervisor declara unidades/cajas no conformes con motivo. El sistema: (a) da de baja materiales consumidos en proporción BOM, (b) registra scrap en ubicación virtual, (c) <em>mantiene intacto el pendiente de la orden</em> (si exige 20 cajas buenas y se rechazan 2, el pendiente sigue siendo 20), (d) imprime etiqueta A4 habilitante para molienda.',
+        tags: ['RQ-PRO-14', 'DEV-PRO-02', 'DEV-CAL-01 · etiqueta A4'],
+        pill: { color: 'pro', text: '🔧 DEV-PRO-02 · wizard scrap por equivalencia sin reducir pendiente · compartido con CAL (DEV-CAL-02)' }
+      },
+      { divider: 'SCRAP DE ARRANQUE / BARRIDO — Fuera de alcance Etapa 1', type: 'warn' },
+      { n: '04', label: 'Scrap arranque', lane: 'pro', variant: 'pro3',
+        title: 'Scrap de arranque, regulación y barrido (Etapa 2+)',
+        desc: 'Las primeras inyecciones son scrap (proceso en regulación). No se declara en SAP actualmente y no cambia en Etapa 1. En Etapa 2 se analizará junto con molienda y reproceso.',
+        tags: ['RQ-PRO-13', 'RQ-PRO-15', 'fuera de alcance Etapa 1']
+      }
+    ],
+    arrows: [
+      { from: 0, to: 1, lane: 'pro', label: 'OP → ejecución' }
+    ]
+  },
+
+  /* ============================================================= */
+  /* P-PRO-4 Generación de Rótulos                                 */
+  /* ============================================================= */
+  ppro4: {
+    code: 'P-PRO-4',
+    name: 'Generación de Rótulos',
+    shortName: 'Rótulos',
+    type: 'Operativo',
+    pcls: 'po',
+    rqRange: 'RQ-PRO-16, RQ-PRO-17',
+    rqCount: 2,
+    description: 'Impresión del rótulo de caja con QR. Corrección de sesión 2: los rótulos se imprimen TODOS antes de iniciar producción y el rollo va al atril. El operario pega uno por caja. Se permite reimpresión parcial por rango. El código de cliente se recupera automáticamente (<em>DEV-PRO-01</em>).',
+    shortDesc: 'Rótulo QR · rollo completo · código cliente automático · DEV-PRO-01',
+    inputs: 'Orden de producción confirmada · tabla de equivalencias SKU/cliente (DEV-PLA-01)',
+    outputs: 'Rollo de rótulos impreso con QR y código de cliente',
+    lanes: ['pro','sis'],
+    intro: 'El diseño del rótulo ya fue desarrollado para Libus. Para Argul se ajusta el layout e incorpora el campo de código de cliente automático (DEV-PRO-01), que depende de la tabla de equivalencias SKU → código de cliente gestionada por Planificación (DEV-PLA-01, MF Planificación).',
+    archNote: 'INPUTS — mrp.production confirmada · tabla de equivalencias SKU/cliente (DEV-PLA-01). OUTPUTS — rótulos con QR + código de cliente. DEV — DEV-PRO-01: código de cliente automático en rótulo (depende de DEV-PLA-01). REFERENCIAS — MF Planificación DEV-PLA-01 · funcionalidad Libus existente.',
+    steps: [
+      { n: '01', label: 'Impresión rollo', lane: 'pro', variant: 'pro',
+        title: 'Generación de rótulo de caja con QR (rollo completo)',
+        desc: 'Antes de iniciar producción, se selecciona la orden y la cantidad de rótulos. El sistema imprime el rollo completo con QR y datos de la orden. Se permite <em>reimpresión parcial por rango</em> (ej.: cajas 101-200). Formato similar al de Libus con ajustes para Argul.',
+        tags: ['RQ-PRO-16', 'estándar · Libus existente', 'verificar layout incluyendo campo código cliente']
+      },
+      { n: '02', label: 'Código cliente', lane: 'sis', variant: 'sis',
+        title: 'Código de cliente automático en el rótulo',
+        desc: 'El sistema recupera automáticamente el código de cliente a partir del SKU y la orden, imprimiéndolo sin intervención del operario. Lógica: (a) ¿requiere código de cliente? (b) ¿qué código según destino local/exportación? (c) mismo SKU con distintos códigos por cliente.',
+        tags: ['RQ-PRO-17', 'DEV-PRO-01', 'depende de DEV-PLA-01 (MF Planificación)'],
+        pill: { color: 'pro', text: '🔧 DEV-PRO-01 · código de cliente automático · depende de DEV-PLA-01 · definir lógica local/exportación con Planificación' }
+      }
+    ],
+    arrows: [
+      { from: 0, to: 1, lane: 'sis', label: 'SKU → código cliente' }
+    ]
+  },
+
+  /* ============================================================= */
+  /* P-PRO-5 Notificación de Producción                            */
+  /* ============================================================= */
+  ppro5: {
+    code: 'P-PRO-5',
+    name: 'Notificación de Producción',
+    shortName: 'Notificación',
+    type: 'Principal',
+    pcls: 'pm',
+    rqRange: 'RQ-PRO-18 a 22',
+    rqCount: 5,
+    description: 'Declaración de producción terminada: registro de palets, actualización de stock e impresión de documentos. Natalia impulsa la <em>notificación automática con cámara</em> (DEV-PRO-03) como camino principal para el Go Live. La App MES debe migrar su fuente de datos de SAP a Odoo — riesgo crítico.',
+    shortDesc: 'Manual (fallback) · automática con cámara · DEV-PRO-03 · App MES',
+    inputs: 'Palet terminado · QR de cajas · datos de la orden',
+    outputs: 'Stock actualizado · documentos de contenedor (manila y código) · datos para App MES',
+    lanes: ['pro','ing','sis'],
+    intro: 'Posición acordada en sesión 2: Natalia impulsa ir directamente a la notificación automática con cámara para el Go Live, dado que el equipo de Gustavo ya tiene el sistema avanzado. La notificación manual queda como fallback. Requerimiento crítico adicional: la App MES hoy consume datos desde SAP — al Go Live debe consumirlos desde Odoo. Coordinación urgente con Gustavo.',
+    archNote: 'INPUTS — palet terminado en estríchadora · QR de cajas (DEV-PRO-03). OUTPUTS — stock actualizado · manila y código de contenedor · datos disponibles para App MES. DEV — DEV-PRO-03: endpoint Odoo para cámara. RIESGO — RQ-PRO-21: App MES debe migrar fuente de datos SAP → Odoo antes del Go Live.',
+    steps: [
+      { n: '01', label: 'Notif. manual', lane: 'pro', variant: 'pro2',
+        title: 'Notificación manual de palet terminado (fallback)',
+        desc: 'El operario selecciona orden y cantidad desde la computadora de salida. El sistema registra producción, actualiza stock y genera documentos de contenedor. Misma lógica que Libus. Se mantiene como fallback.',
+        tags: ['RQ-PRO-18', 'estándar · Libus', 'verificar trazabilidad operario (módulo empleados)']
+      },
+      { n: '02', label: 'Notif. automática', lane: 'sis', variant: 'sis',
+        title: 'Notificación automática por lectura de QR con cámara',
+        desc: 'El sistema de cámara de Gustavo lee los QR de todas las cajas en la estríchadora y envía datos a Odoo vía endpoint/API. Odoo registra producción, actualiza stock y genera imprimibles sin intervención manual. La cámara verifica duplicados y coherencia de orden.',
+        tags: ['RQ-PRO-19', 'DEV-PRO-03', 'coordinación urgente con Gustavo'],
+        pill: { color: 'pro', text: '🔧 DEV-PRO-03 · endpoint Odoo · Natalia impulsa como camino principal para Go Live' }
+      },
+      { n: '03', label: 'Trazabilidad', lane: 'pro', variant: 'pro2',
+        title: 'Usuario único con trazabilidad de operario',
+        desc: 'Puesto compartido con mecanismo de identificación del operario real (login por empleado, PIN o similar). Funcionalidad desarrollada para Libus.',
+        tags: ['RQ-PRO-20', 'estándar · Libus', 'verificar implementación y adaptar']
+      },
+      { divider: 'RIESGO CRÍTICO — App MES y migración de fuente de datos', type: 'warn' },
+      { n: '04', label: 'App MES → Odoo', lane: 'ing', variant: 'ing',
+        title: 'Integración App MES — migración SAP → Odoo',
+        desc: 'La App MES (Ángel, Gustavo) consume datos de OPs desde SAP. Al Go Live todos los datos deben estar disponibles en Odoo. Sin desarrollo técnico a cargo de Argul/Odoo, pero se requiere disponibilizar los datos a tiempo.',
+        tags: ['RQ-PRO-21', 'gap · riesgo crítico Go Live', 'Fabián inició coordinación con Gustavo'],
+        pill: { color: 'ing', text: '⚠ RIESGO CRÍTICO · coordinación urgente Fabián / Gustavo / Franco' }
+      },
+      { n: '05', label: 'Anulación', lane: 'pro', variant: 'pro3',
+        title: 'Anulación de notificación de producción',
+        desc: 'La reversión en Odoo requiere unbuild (MO de desarme). Más complejo que la simple anulación de SAP. Si se implementa DEV-PRO-03, el margen de error baja significativamente.',
+        tags: ['RQ-PRO-22', 'gap', 'documentar procedimiento con supervisores · prioridad baja con DEV-PRO-03']
+      }
+    ],
+    arrows: [
+      { from: 0, to: 1, lane: 'sis', label: 'manual → automática' },
+      { from: 1, to: 3, lane: 'ing', label: 'datos para App MES' }
+    ]
+  },
+
+  /* ============================================================= */
+  /* P-PRO-6 Procesos Secundarios                                  */
+  /* ============================================================= */
+  ppro6: {
+    code: 'P-PRO-6',
+    name: 'Procesos Secundarios',
+    shortName: 'Proc. Secundarios',
+    type: 'Operativo',
+    pcls: 'po',
+    rqRange: 'RQ-PRO-23 a 25',
+    rqCount: 3,
+    description: 'Transformación adicional sobre producto inyectado: <em>ensamble de tapones</em>, <em>soldadura de bolillas</em> y <em>coating de lentes</em>. Todos siguen lógica de dos etapas (inyección → semielaborado → producto terminado), salvo coating que tiene un problema de conteo pendiente.',
+    shortDesc: 'Ensamble tapones · soldadura bolillas · coating lentes · gap conteo',
+    inputs: 'Semielaborados inyectados',
+    outputs: 'Producto terminado (tapón ensamblado, bolilla soldada, lente con coating)',
+    lanes: ['pro','ing','sis'],
+    intro: 'Son tres procesos con la misma lógica general: inyección genera un semielaborado que pasa a una segunda operación (ensamble, soldadura, coating) para obtener el producto terminado. La excepción es el coating de lentes, donde hoy no se genera stock intermedio porque no se conoce la cantidad exacta de piezas en el carro de transporte. Natalia evalúa con Gustavo si el sistema de visión puede contar automáticamente.',
+    archNote: 'INPUTS — semielaborados inyectados. OUTPUTS — producto terminado. Sin desarrollos custom. GAP — RQ-PRO-25 (coating): conteo pendiente de resolución con Gustavo.',
+    steps: [
+      { n: '01', label: 'Ensamble tapones', lane: 'pro', variant: 'pro',
+        title: 'Ensamble de tapones (guarnición + etiqueta)',
+        desc: 'Dos OFs independientes: inyección del semielaborado y ensamble con guarnición y etiqueta. Tres ensambladoras como centros de trabajo. Misma lógica que Libus.',
+        tags: ['RQ-PRO-23', 'estándar', 'sin gap']
+      },
+      { n: '02', label: 'Soldadura bolillas', lane: 'pro', variant: 'pro2',
+        title: 'Soldadura de bolillas (dos semiesferas)',
+        desc: 'Inyección de semiesfera + soldadura → bolilla (producto terminado o semielaborado para Libus/Cenitram). Dos OFs independientes.',
+        tags: ['RQ-PRO-24', 'estándar', 'sin gap']
+      },
+      { n: '03', label: 'Coating lentes', lane: 'pro', variant: 'pro',
+        title: 'Coating de lentes — problema de conteo',
+        desc: 'El lente pasa directamente al coating sin stock intermedio (perchas del carro no siempre completas). <em>Opción A</em> (preferida): dos OFs con stock intermedio (requiere resolver conteo). <em>Opción B</em>: una sola OF con dos work orders. Natalia evalúa con Gustavo si el sistema de visión puede contar.',
+        tags: ['RQ-PRO-25', 'gap', 'reunión Natalia / Gustavo pendiente'],
+        pill: { color: 'dep', text: '⚠ GAP · conteo pendiente · resolución depende de reunión Natalia + Gustavo (sistema de visión)' }
+      }
+    ],
+    arrows: []
+  },
+
+  /* ============================================================= */
+  /* P-PRO-7 Órdenes de Ensayo                                     */
+  /* ============================================================= */
+  ppro7: {
+    code: 'P-PRO-7',
+    name: 'Órdenes de Ensayo',
+    shortName: 'Ensayos',
+    type: 'Operativo',
+    pcls: 'po',
+    rqRange: 'RQ-PRO-26',
+    rqCount: 1,
+    description: 'Fabricaciones de moldes nuevos o pruebas de material, muy frecuentes (una o más por día). Hoy no se gestionan en SAP. Generan indisponibilidad real de la inyectora. Deben aparecer en el Gantt y estar planificadas.',
+    shortDesc: 'Orden de ensayo en Gantt · flag ensayo · tipo MO especial',
+    inputs: 'Solicitud de ensayo desde Desarrollo de Producto (Miguel Caro) · molde de prueba',
+    outputs: 'Orden de ensayo en Gantt · datos registrados (molde, máquina, material, ciclo medido)',
+    lanes: ['ing','pla','sis'],
+    intro: 'Los ensayos se planifican hoy en Don PC y se comunican en papel. La App MES registra datos del ensayo. Al pasar a Odoo, estas órdenes deben aparecer en el Gantt y bloquear la capacidad de la inyectora asignada. Las órdenes de ensayo no tienen producto terminado definido ni BOM estándar (son para productos en desarrollo). Se requiere un tipo de MO con campos descriptivos y un flag «ensayo» consultable por la App MES.',
+    archNote: 'INPUTS — solicitud de ensayo de Desarrollo de Producto (Miguel Caro). OUTPUTS — orden en Gantt · bloqueo de capacidad · datos del ensayo registrados. GAP — analizar con Franco si se configura con MO de producto placeholder o requiere desarrollo.',
+    steps: [
+      { n: '01', label: 'Solicitud ensayo', lane: 'ing', variant: 'ing',
+        title: 'Solicitud de ensayo desde Desarrollo de Producto',
+        desc: 'Miguel Caro o el equipo técnico solicita el ensayo de un molde nuevo o prueba de material. Hoy la solicitud se gestiona en Don PC y se comunica en papel a Producción.',
+        tags: ['RQ-PRO-26', 'gap', 'coordinar con Planificación y Desarrollo de Producto']
+      },
+      { n: '02', label: 'OF ensayo en Gantt', lane: 'pla', variant: 'pla',
+        title: 'Planificación genera orden de ensayo en el Gantt',
+        desc: 'La orden de ensayo aparece en el Gantt y bloquea la capacidad de la inyectora asignada. La App MES identifica la orden como ensayo (flag) y no la contabiliza como producción regular.',
+        tags: ['RQ-PRO-26', 'gap', 'tipo MO con flag ensayo · analizar con Franco'],
+        pill: { color: 'sis', text: '⚠ GAP · tipo de MO especial con flag ensayo · analizar con Franco Nicolau' }
+      },
+      { n: '03', label: 'Datos registrados', lane: 'sis', variant: 'sis2',
+        title: 'Registro de datos del ensayo en Odoo',
+        desc: 'Los datos del ensayo (molde, máquina, material, ciclo medido) quedan registrados en Odoo vinculados a la OF de ensayo. Reemplaza el registro en Don PC para esta información.',
+        tags: ['RQ-PRO-26', 'gap', 'campos descriptivos sin BOM estándar']
+      }
+    ],
+    arrows: [
+      { from: 0, to: 1, lane: 'pla', label: 'solicitud → Gantt' }
+    ]
+  },
+
+  /* ============================================================= */
+  /* P-PRO-8 Solicitud de Insumos al PR                            */
+  /* ============================================================= */
+  ppro8: {
+    code: 'P-PRO-8',
+    name: 'Solicitud de Insumos a Depósito (PR)',
+    shortName: 'Insumos al PR',
+    type: 'Operativo',
+    pcls: 'po',
+    rqRange: 'RQ-PRO-27, RQ-PRO-29, RQ-PRO-30',
+    rqCount: 3,
+    description: 'Abastecimiento del depósito productivo (PR), espacio entre depósito e inyectoras (24-48 hs capacidad). Los supervisores generan solicitudes al depósito con <em>stock_request</em> (OCA, ya implementado en Libus). El abastecimiento automático por MRP es alcance del MF Planificación.',
+    shortDesc: 'stock_request OCA · especificación de lote · DEV-PLA-03 (MF Planificación)',
+    inputs: 'Necesidad de materiales en PR · número de lote requerido',
+    outputs: 'Solicitud de transferencia depósito central → PR → impacto en App WMS Hangel',
+    lanes: ['pro','dep','sis'],
+    intro: 'Este circuito ya está definido en el MF de Inventario/WMS (RQ-INV-13, RQ-INV-29) y usa el módulo OCA stock_request implementado en Libus. La solicitud de Producción impacta en la App WMS Hangel del depósito para que los operarios vean el trabajo pendiente. El abastecimiento automático por reglas Pull/MRP con horizonte acotado es responsabilidad de Planificación (DEV-PLA-03).',
+    archNote: 'INPUTS — necesidad de materiales en PR · lote requerido. OUTPUTS — solicitud de transferencia → picking en Odoo → impacto en App WMS Hangel. MÓDULOS — stock_request (OCA/stock-logistics-warehouse 17.0). DEV — DEV-PLA-03 (MF Planificación) para abastecimiento automático.',
+    steps: [
+      { n: '01', label: 'Solicitud al PR', lane: 'pro', variant: 'pro',
+        title: 'Solicitud de abastecimiento al PR por sistema',
+        desc: 'Los supervisores generan solicitudes al depósito con <em>stock_request</em> (OCA). La solicitud dispara el picking en Odoo e impacta en la App WMS Hangel. Todo el movimiento queda registrado. Cubre los sub-escenarios a y b de RQ-INV-13.',
+        tags: ['RQ-PRO-27', 'OCA · stock_request', 'ya implementado en Libus'],
+        pill: { color: 'cal', text: '📦 OCA stock_request · ya implementado en Libus · perfiles de acceso a definir' }
+      },
+      { n: '02', label: 'Lote específico', lane: 'pro', variant: 'pro2',
+        title: 'Solicitud con especificación de lote',
+        desc: 'El supervisor especifica qué lote de materia prima debe enviarse al PR (trazabilidad de consumo y continuidad de lote en ensamble). El depósito ejecuta la transferencia del lote solicitado.',
+        tags: ['RQ-PRO-29', 'gap', 'verificar si stock_request OCA soporta lote · Franco evalúa'],
+        pill: { color: 'dep', text: '⚠ GAP · verificar soporte de lote en stock_request OCA · extensión menor si no' }
+      },
+      { n: '03', label: 'MRP acotado → PR', lane: 'sis', variant: 'sis2',
+        title: 'Abastecimiento automático por reglas Pull/MRP (horizonte acotado)',
+        desc: 'Reglas pull con horizonte de 24-48 hs de consumo para que el MRP genere automáticamente las transferencias al PR. Responsabilidad de Planificación (DEV-PLA-03, MF Planificación).',
+        tags: ['RQ-PRO-30', 'DEV-PLA-03 (MF Planificación)', 'ref. MF Planificación sección 7']
+      }
+    ],
+    arrows: [
+      { from: 0, to: 1, lane: 'pro', label: 'solicitud + lote' }
+    ]
+  },
+
+  /* ============================================================= */
+  /* P-PRO-9 Reportes y KPIs de Producción                         */
+  /* ============================================================= */
+  ppro9: {
+    code: 'P-PRO-9',
+    name: 'Reportes y KPIs de Producción',
+    shortName: 'Reportes PRO',
+    type: 'Soporte',
+    pcls: 'ps',
+    rqRange: 'RQ-PRO-31 a 34',
+    rqCount: 4,
+    description: 'Reportes disponibles en Fase 1: producción notificada, Gantt, stock en 901. Los KPIs (OEE, eficiencia, ciclo real vs. estándar) se planificarán en fase posterior. El reporte de ubicación 901 es condicional a DEV-PRO-03.',
+    shortDesc: 'Prod. notificada · Gantt · stock 901 > 48 hs · KPIs fase posterior',
+    inputs: 'Datos de producción acumulados en Odoo',
+    outputs: 'Reportes de producción · reporte de stock en 901 · KPIs (fase posterior)',
+    lanes: ['pro','sis'],
+    intro: 'Los reportes de producción notificada y el Gantt por centro de trabajo son nativos de Odoo. El reporte de stock en ubicación 901 con antigüedad > 48 hs (DEV-PRO-04) detecta notificaciones erróneas, pero puede quedar obsoleto si se implementa DEV-PRO-03 (notificación automática). Los KPIs de producción se planificarán una vez acumulados datos en el sistema.',
+    archNote: 'OUTPUTS — reportes nativos de Odoo · DEV-PRO-04 (stock 901 > 48 hs, condicional). DEV — DEV-PRO-04: reporte condicional a DEV-PRO-03.',
+    steps: [
+      { n: '01', label: 'Prod. notificada', lane: 'sis', variant: 'sis',
+        title: 'Reporte de producción notificada',
+        desc: 'Listado de producción notificada por orden, fecha, operario, cantidad en cajas y unidades. Disponible desde el módulo de Fabricación desde el Go Live.',
+        tags: ['RQ-PRO-31', 'estándar', 'sin gap']
+      },
+      { n: '02', label: 'Gantt', lane: 'sis', variant: 'sis2',
+        title: 'Gantt de órdenes por centro de trabajo',
+        desc: 'Vista Gantt con todas las órdenes activas y futuras, fechas de inicio y fin estimadas.',
+        tags: ['RQ-PRO-32', 'estándar', 'sin gap']
+      },
+      { n: '03', label: 'Stock 901 > 48 hs', lane: 'pro', variant: 'pro',
+        title: 'Reporte stock en ubicación 901 con antigüedad > 48 hs',
+        desc: 'Muestra palets y lotes en ubicación de transición de planta (901) con más de 48 hs. Detecta notificaciones erróneas. Condicional: puede quedar obsoleto si se implementa DEV-PRO-03.',
+        tags: ['RQ-PRO-33', 'DEV-PRO-04', 'condicional a DEV-PRO-03'],
+        pill: { color: 'pro', text: '🔧 DEV-PRO-04 · condicional a DEV-PRO-03 · prioridad media' }
+      },
+      { n: '04', label: 'KPIs (posterior)', lane: 'sis', variant: 'sis2',
+        title: 'KPIs de producción — fase posterior',
+        desc: 'Dashboards de eficiencia por inyectora (ciclo real vs. estándar), OEE, producción por turno, scrap por orden. A planificar una vez consolidados datos.',
+        tags: ['RQ-PRO-34', 'fuera de alcance', 'fase posterior']
+      }
+    ],
+    arrows: []
+  },
+
+
+
+
+};
+
+/* ================================================================= */
+/* PROCESS GROUPS                                                     */
+/* ================================================================= */
+const GROUPS = [
+  { title: 'PRODUCCIÓN', cls: 'part-pro', pids: ['ppro1','ppro2','ppro3','ppro4','ppro5','ppro6','ppro7','ppro8','ppro9'] }
+];
+const ALL_PIDS = GROUPS.flatMap(g => g.pids);
+
+/* ================================================================= */
+/* RENDER HELPERS                                                     */
+/* ================================================================= */
+function el(tag, attrs={}, ...children){
+  const e = document.createElement(tag);
+  for(const k in attrs){
+    if(k === 'class') e.className = attrs[k];
+    else if(k === 'html') e.innerHTML = attrs[k];
+    else if(k.startsWith('on')) e.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  children.forEach(c => {
+    if(c == null) return;
+    if(typeof c === 'string' || typeof c === 'number') e.appendChild(document.createTextNode(String(c)));
+    else if(c instanceof Node) e.appendChild(c);
+  });
+  return e;
+}
+
+/* ================================================================= */
+/* ROUTE BAR                                                          */
+/* ================================================================= */
+function renderRouteBar(route){
+  const bar = document.getElementById('routebar');
+  bar.innerHTML = '';
+  const left = el('div',{class:'routebar-left'});
+  left.appendChild(el('span',{html:'🏭 PRODUCCIÓN'}));
+  left.appendChild(el('span',{class:'crumb-sep',html:'/'}));
+
+  if(route === 'overview'){
+    left.appendChild(el('span',{class:'crumb-active'},'PROCESOS DE NEGOCIO'));
+  } else {
+    const proc = PROCESSES[route];
+    left.appendChild(el('span',{},'Procesos de negocio'));
+    left.appendChild(el('span',{class:'crumb-sep',html:'/'}));
+    left.appendChild(el('span',{class:'crumb-active'}, proc.code + ' · ' + proc.shortName));
+    const right = el('div',{class:'routebar-right'});
+    right.appendChild(el('a',{href:'#/overview'},'← Volver a overview'));
+    bar.appendChild(left);
+    bar.appendChild(right);
+    return;
+  }
+  bar.appendChild(left);
+  const right = el('div',{class:'routebar-right'},'v5.0 · 30-abr-2026');
+  bar.appendChild(right);
+}
+
+/* ================================================================= */
+/* OVERVIEW VIEW                                                      */
+/* ================================================================= */
+function renderOverview(){
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const header = el('header',{class:'page'});
+  header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Producción · Argul y Compañía S.A.'));
+  header.appendChild(el('span',{class:'version-badge'},'Procesos de Negocio · 9 procesos'));
+  const h1 = el('h1');
+  h1.innerHTML = 'Procesos de Negocio de <span class="pro">Producción</span>';
+  header.appendChild(h1);
+  header.appendChild(el('p',{},'Plataforma de navegación · 9 flujos · 34 requerimientos · 4 desarrollos (DEV-PRO-01/02/03/04) · 3 módulos OCA'));
+  app.appendChild(header);
+
+  const legend = el('div',{class:'legend'});
+  Object.entries(LANES).forEach(([key, lane]) => {
+    const item = el('div',{class:'legend-item'});
+    item.appendChild(el('div',{class:'legend-dot',style:`background:var(--${lane.color})`}));
+    item.appendChild(document.createTextNode(lane.name));
+    legend.appendChild(item);
+  });
+  app.appendChild(legend);
+
+  app.appendChild(el('div',{
+    class:'intro-note',
+    html:'<strong>⬡ ORIENTACIÓN —</strong> Esta plataforma cubre los 9 procesos del área de Producción. <strong>Natalia Cascardo</strong> es la Key User. Producción ejecuta las órdenes lanzadas por Planificación (Victoria Gini). La estructura de moldes se gestiona con el módulo <strong>mrp_tool_tracking</strong> (implementado en Libus). Los procesos de Gestión de Calidad se documentan en un MF y HTML separados. Hacé click en cualquier tarjeta para ver el flujo detallado.'
+  }));
+
+  app.appendChild(el('div',{
+    class:'arch-note',
+    html:'<strong>⬢ DESARROLLOS Y MÓDULOS OCA —</strong> Módulos OCA confirmados: <strong>stock_request</strong> (implementado en Libus) · <strong>mrp_byproduct</strong> (nativo Odoo 17). Desarrollos custom: <strong>DEV-PRO-01</strong> (código cliente en rótulo) · <strong>DEV-PRO-02</strong> (wizard Producto No Conforme, compartido con Calidad) · <strong>DEV-PRO-03</strong> (endpoint cámara) · <strong>DEV-PRO-04</strong> (stock 901). Módulos de calidad y desarrollos asociados se documentan en el MF/HTML de Calidad.'
+  }));
+
+  const overviewWrap = el('div',{class:'overview-wrap'});
+
+  /* MACRO FLOW */
+  overviewWrap.appendChild(el('div',{class:'section-title'},'Macro-flujo · eslabonamiento de procesos'));
+  const macro = el('div',{class:'macro-flow'});
+  function macroStep(pid){
+    const p = PROCESSES[pid];
+    const step = el('a',{class:`macro-step ${p.pcls}`, href:`#/${pid}`});
+    step.appendChild(el('div',{class:'macro-code'}, p.code + ' · ' + p.type.toUpperCase()));
+    step.appendChild(el('div',{class:'macro-name'}, p.shortName));
+    step.appendChild(el('div',{class:'macro-hint'}, p.shortDesc.split('·')[0]));
+    return step;
+  }
+  function macroArrow(){ return el('div',{class:'macro-arrow'},'→'); }
+
+  /* Production flow */
+  ['ppro1','ppro2','ppro3','ppro4','ppro5'].forEach((pid,i,arr) => {
+    macro.appendChild(macroStep(pid));
+    if(i < arr.length-1) macro.appendChild(macroArrow());
+  });
+  overviewWrap.appendChild(macro);
+
+  /* PART 1 — PRODUCCIÓN cards */
+  GROUPS.forEach(group => {
+    overviewWrap.appendChild(el('div',{class:`part-divider ${group.cls}`}, group.title));
+    overviewWrap.appendChild(el('div',{class:'section-title'},'Procesos · click para navegar al diagrama'));
+    const grid = el('div',{class:'pgrid'});
+    group.pids.forEach(pid => {
+      const p = PROCESSES[pid];
+      const card = el('a',{class:`pcard ${p.pcls}`, href:`#/${pid}`});
+
+      const head = el('div',{class:'pcard-head'});
+      head.appendChild(el('div',{class:'pcard-code'}, p.code));
+      head.appendChild(el('div',{class:'pcard-type'}, p.type));
+      card.appendChild(head);
+
+      card.appendChild(el('div',{class:'pcard-title'}, p.name));
+      card.appendChild(el('div',{class:'pcard-desc', html: p.description}));
+
+      if(p.inputs || p.outputs){
+        const io = el('div',{class:'pcard-io'});
+        if(p.inputs){
+          const r = el('div',{class:'io-row'});
+          r.appendChild(el('span',{class:'io-label'},'IN:'));
+          r.appendChild(el('span',{class:'io-text'}, p.inputs));
+          io.appendChild(r);
+        }
+        if(p.outputs){
+          const r = el('div',{class:'io-row'});
+          r.appendChild(el('span',{class:'io-label out'},'OUT:'));
+          r.appendChild(el('span',{class:'io-text'}, p.outputs));
+          io.appendChild(r);
+        }
+        card.appendChild(io);
+      }
+
+      const lanesActive = activeLanes(p);
+      const lanesRow = el('div',{class:'pcard-lanes'});
+      lanesActive.forEach(laneKey => {
+        const lane = LANES[laneKey];
+        lanesRow.appendChild(el('span',{class:`lane-chip ${laneKey}`}, '● ' + lane.short));
+      });
+      card.appendChild(lanesRow);
+
+      const meta = el('div',{class:'pcard-meta'});
+      const g1 = el('div',{class:'meta-group'});
+      g1.appendChild(el('span',{class:'meta-label'},'RQs:'));
+      g1.appendChild(el('span',{class:'meta-value'}, p.rqCount));
+      meta.appendChild(g1);
+      const g2 = el('div',{class:'meta-group'});
+      g2.appendChild(el('span',{class:'meta-label'},'rango:'));
+      g2.appendChild(el('span',{class:'meta-value'}, p.rqRange));
+      meta.appendChild(g2);
+      const g3 = el('div',{class:'meta-group'});
+      g3.appendChild(el('span',{class:'meta-label'},'pasos:'));
+      g3.appendChild(el('span',{class:'meta-value'}, p.steps.filter(s=>!s.divider).length));
+      meta.appendChild(g3);
+      card.appendChild(meta);
+
+      card.appendChild(el('div',{class:'pcard-cta'}, 'Ver diagrama →'));
+      grid.appendChild(card);
+    });
+    overviewWrap.appendChild(grid);
+  });
+
+  app.appendChild(overviewWrap);
+}
+
+/* ================================================================= */
+/* PROCESS DIAGRAM VIEW                                               */
+/* ================================================================= */
+function activeLanes(proc){
+  const used = new Set();
+  proc.steps.forEach(s => { if(s.lane) used.add(s.lane); });
+  return proc.lanes.filter(l => used.has(l));
+}
+
+function renderProcess(pid){
+  const proc = PROCESSES[pid];
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+
+  const header = el('header',{class:'page'});
+  header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Producción · Argul y Compañía S.A.'));
+  header.appendChild(el('span',{class:'version-badge'}, proc.code + ' · ' + proc.type));
+  const h1 = el('h1');
+  const isCAL = proc.code.startsWith('P-CAL');
+  h1.innerHTML = 'Proceso de <span class="' + (isCAL?'cal':'pro') + '">' + proc.shortName + '</span>';
+  header.appendChild(h1);
+  header.appendChild(el('p',{}, proc.name + ' · ' + proc.rqRange));
+  app.appendChild(header);
+
+  const lanesActive = activeLanes(proc);
+  const legend = el('div',{class:'legend'});
+  lanesActive.forEach(laneKey => {
+    const lane = LANES[laneKey];
+    const item = el('div',{class:'legend-item'});
+    item.appendChild(el('div',{class:'legend-dot',style:`background:var(--${lane.color})`}));
+    item.appendChild(document.createTextNode(lane.name));
+    legend.appendChild(item);
+  });
+  app.appendChild(legend);
+
+  if(proc.intro) app.appendChild(el('div',{class:'intro-note',html:'<strong>⬡ CONTEXTO —</strong> ' + proc.intro}));
+  if(proc.archNote) app.appendChild(el('div',{class:'arch-note',html:'<strong>◆ ' + proc.archNote}));
+
+  const diagramWrap = el('div',{class:'diagram'});
+  const diagramRel = el('div',{class:'diagram-rel'});
+  diagramWrap.appendChild(diagramRel);
+
+  const lanes = lanesActive;
+  const idealLaneWidth = 330;
+  const totalWidth = Math.min(90 + lanes.length * idealLaneWidth, 1700);
+  const sw = el('div',{
+    class:'sw', id:'grid',
+    style:`grid-template-columns:90px repeat(${lanes.length},minmax(260px,1fr));max-width:${totalWidth}px;margin:0 auto;`
+  });
+
+  sw.appendChild(el('div',{class:'hdr-corner'},'PASO'));
+  lanes.forEach((laneKey, idx) => {
+    const lane = LANES[laneKey];
+    const extraCls = (idx === lanes.length - 1) ? ' hdr-last' : '';
+    const h = el('div',{class:`hdr hdr-${lane.color}${extraCls}`});
+    h.innerHTML = `${lane.icon}<br>${lane.name}<br><span style="font-size:7.5px;opacity:.7">${lane.subtitle}</span>`;
+    sw.appendChild(h);
+  });
+
+  const steps = proc.steps;
+  let i = 0;
+  while(i < steps.length){
+    const step = steps[i];
+    if(step.divider){
+      const dtype = step.type || '';
+      sw.appendChild(el('div',{class:'divider-row' + (dtype ? ' '+dtype : '')}, step.divider));
+      i++;
+      continue;
+    }
+
+    const rowSteps = [step];
+    let j = i + 1;
+    while(j < steps.length && !steps[j].divider && steps[j].groupWith === step.n){
+      rowSteps.push(steps[j]);
+      j++;
+    }
+
+    const sl = el('div',{class:'sl'});
+    sl.innerHTML = `<strong>${step.n}</strong>${step.label||''}`;
+    sw.appendChild(sl);
+
+    const stepByLane = {};
+    rowSteps.forEach(s => { stepByLane[s.lane] = s; });
+
+    lanes.forEach((laneKey, idx) => {
+      const lane = LANES[laneKey];
+      const isLast = (idx === lanes.length - 1);
+      const extraCls = isLast ? ' last-col' : '';
+      const lc = el('div',{class:`lc ${lane.color}-bg${extraCls}`});
+      if(stepByLane[laneKey]){
+        const s = stepByLane[laneKey];
+        const card = el('div',{class:`card ${s.variant}`});
+        card.appendChild(el('div',{class:'card-title'}, s.title));
+        card.appendChild(el('div',{class:'card-desc',html: s.desc}));
+        if(s.tags && s.tags.length){
+          const tagsDiv = el('div',{class:'card-tags'});
+          s.tags.forEach(t => tagsDiv.appendChild(el('span',{class:'ctag'}, t)));
+          card.appendChild(tagsDiv);
+        }
+        if(s.cite) card.appendChild(el('span',{class:'cite'}, s.cite));
+        if(s.pill) card.appendChild(el('div',{class:`auto-pill auto-${s.pill.color}`, html: s.pill.text}));
+        lc.appendChild(card);
+      }
+      sw.appendChild(lc);
+    });
+
+    const nextStepIdx = j;
+    const hasNextContent = nextStepIdx < steps.length;
+    const nextIsEndDivider = hasNextContent && steps[nextStepIdx].divider && steps[nextStepIdx].type === 'end';
+
+    if(hasNextContent && !nextIsEndDivider){
+      let nextContentStep = null;
+      let k = nextStepIdx;
+      while(k < steps.length){ if(!steps[k].divider){ nextContentStep = steps[k]; break; } k++; }
+      sw.appendChild(el('div',{class:'ar-corner'}));
+      lanes.forEach((laneKey, idx) => {
+        const lane = LANES[laneKey];
+        const isLast = (idx === lanes.length - 1);
+        const extraCls = isLast ? ' last-col' : '';
+        const ar = el('div',{class:`ar ${lane.color}-bg${extraCls}`});
+        if(nextContentStep && nextContentStep.lane === laneKey){
+          const varr = el('div',{class:`varr ${lane.color}`});
+          varr.appendChild(el('div',{class:'sh'}));
+          varr.appendChild(el('div',{class:'hd'}));
+          ar.appendChild(varr);
+        }
+        sw.appendChild(ar);
+      });
+    }
+
+    i = j;
+  }
+
+  diagramRel.appendChild(sw);
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','ov');
+  svg.setAttribute('id','ov');
+  diagramRel.appendChild(svg);
+  app.appendChild(diagramWrap);
+  requestAnimationFrame(() => drawArrows(proc));
+}
+
+function drawArrows(proc){
+  const svg = document.getElementById('ov');
+  if(!svg) return;
+  const wrap = svg.parentElement, wr = wrap.getBoundingClientRect();
+  svg.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+  const defs = document.createElementNS(ns, 'defs');
+  ['pro','cal','pla','dep','sis','ing'].forEach(c => {
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--' + c).trim() || '#ccc';
+    const mk = document.createElementNS(ns, 'marker');
+    mk.setAttribute('id', 'm' + c);
+    mk.setAttribute('markerWidth','8');
+    mk.setAttribute('markerHeight','8');
+    mk.setAttribute('refX','7');
+    mk.setAttribute('refY','3');
+    mk.setAttribute('orient','auto');
+    const pth = document.createElementNS(ns, 'path');
+    pth.setAttribute('d','M0,0 L0,6 L8,3 z');
+    pth.setAttribute('fill', hex);
+    mk.appendChild(pth);
+    defs.appendChild(mk);
+  });
+  svg.appendChild(defs);
+  if(!proc.arrows || !proc.arrows.length) return;
+  const cards = Array.from(document.querySelectorAll('.card'));
+  if(cards.length < 2) return;
+  function rc(el){
+    const r = el.getBoundingClientRect();
+    return { cx: r.left-wr.left+r.width/2, cy: r.top-wr.top+r.height/2, l: r.left-wr.left, r: r.right-wr.left, t: r.top-wr.top, b: r.bottom-wr.top };
+  }
+  function line(x1,y1,x2,y2,col,mid,lbl){
+    const path = document.createElementNS(ns,'path');
+    path.setAttribute('d',`M${x1},${y1} H${x2} V${y2}`);
+    path.setAttribute('stroke',col);
+    path.setAttribute('stroke-width','2');
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke-dasharray','6,3');
+    path.setAttribute('marker-end',`url(#${mid})`);
+    svg.appendChild(path);
+    if(lbl){
+      const txt = document.createElementNS(ns,'text');
+      txt.setAttribute('x',(x1+x2)/2);
+      txt.setAttribute('y',y1-5);
+      txt.setAttribute('text-anchor','middle');
+      txt.setAttribute('font-size','9');
+      txt.setAttribute('font-family','IBM Plex Mono,monospace');
+      txt.setAttribute('fill',col);
+      txt.setAttribute('opacity','.9');
+      txt.textContent = lbl;
+      svg.appendChild(txt);
+    }
+  }
+  proc.arrows.forEach(a => {
+    if(a.from >= cards.length || a.to >= cards.length) return;
+    const c1 = rc(cards[a.from]), c2 = rc(cards[a.to]);
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--'+a.lane).trim();
+    if(Math.abs(c1.cy-c2.cy) < 50){
+      const x1 = c1.cx>c2.cx ? c1.l : c1.r;
+      const x2 = c1.cx>c2.cx ? c2.r : c2.l;
+      line(x1,c1.cy,x2,c2.cy,hex,'m'+a.lane,a.label);
+    } else {
+      const x1 = c1.r;
+      const x2 = c2.l > c1.r ? c2.l : c2.r;
+      line(x1,c1.cy,x2,c2.cy,hex,'m'+a.lane,a.label);
+    }
+  });
+}
+
+/* ================================================================= */
+/* ROUTER                                                             */
+/* ================================================================= */
+function router(){
+  const hash = window.location.hash || '#/overview';
+  const path = hash.replace(/^#\//, '');
+  if(PROCESSES[path]){ renderRouteBar(path); renderProcess(path); }
+  else { window.location.hash = '#/overview'; renderRouteBar('overview'); renderOverview(); }
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange', router);
+window.addEventListener('load', router);
+window.addEventListener('resize', () => {
+  const hash = window.location.hash.replace(/^#\//,'');
+  if(PROCESSES[hash]) drawArrows(PROCESSES[hash]);
+});
+</script>
+
+<!-- ========== FEATURES ========== -->
+<div class="features-bar" id="featuresBar">
+  <div class="toggle-header" onclick="collapseBar()">⚙ Features <span id="collapseArrow">▼</span></div>
+  <div class="toggle-group">
+    <div class="toggle-item" id="tog-analytics" onclick="toggleFeature('analytics')"><div class="toggle-switch"></div>Vista de Análisis</div>
+    <div class="toggle-item" id="tog-presentation" onclick="toggleFeature('presentation')"><div class="toggle-switch"></div>Modo Presentación</div>
+  </div>
+</div>
+
+<div class="analytics-panel" id="analyticsPanel">
+  <div class="panel-title">📊 Análisis del Proceso</div>
+  <div class="stat-group">
+    <div class="stat-lbl">Proceso actual</div>
+    <div class="stat-val" id="aCode">—</div>
+    <div class="stat-det" id="aName">Seleccioná un proceso</div>
+  </div>
+  <div class="stat-group">
+    <div class="stat-lbl">Pasos totales</div>
+    <div class="stat-val" id="aSteps">0</div>
+    <div class="stat-det" id="aLanes">—</div>
+  </div>
+  <div class="stat-group">
+    <div class="stat-lbl">Mapa de calor · frecuencia de uso</div>
+    <div class="heatmap-grid" id="aHeat"></div>
+  </div>
+</div>
+
+<div class="pres-controls" id="presControls">
+  <button class="pres-btn" onclick="presNav(-1)">◀ Anterior</button>
+  <div class="pres-info" id="presInfo">Proceso 1 / 13</div>
+  <button class="pres-btn" onclick="presNav(1)">Siguiente ▶</button>
+  <button class="pres-btn" onclick="exitPres()">Salir [ESC]</button>
+</div>
+
+<script>
+const FT = { analytics:false, presentation:false };
+let _presIdx = 0;
+const PRES_ORDER = ALL_PIDS;
+const HEAT = { ppro1:3, ppro2:3, ppro3:5, ppro4:4, ppro5:5, ppro6:3, ppro7:2, ppro8:3, ppro9:2 };
+
+function collapseBar(){
+  const bar = document.getElementById('featuresBar');
+  const arr = document.getElementById('collapseArrow');
+  bar.classList.toggle('collapsed');
+  arr.textContent = bar.classList.contains('collapsed') ? '▲' : '▼';
+}
+
+function toggleFeature(key){
+  FT[key] = !FT[key];
+  const tog = document.getElementById(`tog-${key}`);
+  tog.classList.toggle('active', FT[key]);
+  if(key === 'analytics'){ document.getElementById('analyticsPanel').classList.toggle('open', FT[key]); if(FT[key]) refreshAnalytics(); }
+  else if(key === 'presentation'){ if(FT[key]) enterPres(); else exitPres(); }
+}
+
+function refreshAnalytics(){
+  const hash = window.location.hash.replace(/^#\//,'');
+  const proc = PROCESSES[hash];
+  if(!proc){ document.getElementById('aCode').textContent='—'; return; }
+  document.getElementById('aCode').textContent = proc.code;
+  document.getElementById('aName').textContent = proc.name;
+  const content = proc.steps.filter(s=>!s.divider);
+  document.getElementById('aSteps').textContent = content.length;
+  const byLane = {};
+  content.forEach(s=>{ byLane[s.lane]=(byLane[s.lane]||0)+1; });
+  document.getElementById('aLanes').textContent = Object.entries(byLane).map(([k,v])=>`${LANES[k].name}: ${v}`).join(' · ');
+  const heat = document.getElementById('aHeat');
+  heat.innerHTML = '';
+  Object.keys(PROCESSES).forEach(pid=>{
+    const h = HEAT[pid]||1;
+    const d = document.createElement('div');
+    d.className = `hm-cell hm-${h}`;
+    d.textContent = PROCESSES[pid].code;
+    d.title = `${PROCESSES[pid].code} · Frecuencia ${h}/5`;
+    d.onclick = ()=>{ window.location.hash='#/'+pid; };
+    heat.appendChild(d);
+  });
+}
+
+function enterPres(){
+  document.body.classList.add('pres-mode');
+  const cur = window.location.hash.replace(/^#\//,'');
+  _presIdx = Math.max(0, PRES_ORDER.indexOf(cur));
+  updatePresInfo();
+  document.addEventListener('keydown', presKey);
+}
+function exitPres(){
+  document.body.classList.remove('pres-mode');
+  document.removeEventListener('keydown', presKey);
+  FT.presentation = false;
+  document.getElementById('tog-presentation').classList.remove('active');
+}
+function presKey(e){
+  if(e.key==='ArrowRight') presNav(1);
+  else if(e.key==='ArrowLeft') presNav(-1);
+  else if(e.key==='Escape') exitPres();
+}
+function presNav(dir){
+  _presIdx = (_presIdx + dir + PRES_ORDER.length) % PRES_ORDER.length;
+  window.location.hash = '#/' + PRES_ORDER[_presIdx];
+  updatePresInfo();
+}
+function updatePresInfo(){
+  document.getElementById('presInfo').textContent = `Proceso ${_presIdx+1} / ${PRES_ORDER.length}`;
+}
+
+window.addEventListener('hashchange', ()=>{
+  setTimeout(()=>{
+    if(FT.analytics) refreshAnalytics();
+    if(FT.presentation) updatePresInfo();
+  }, 200);
+});
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{ if(FT.analytics) refreshAnalytics(); }, 300);
+});
+</script>
+
+</body>
+</html>

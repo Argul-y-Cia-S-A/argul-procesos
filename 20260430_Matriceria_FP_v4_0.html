@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matricería — Cadena de Valor y Flujos de Procesos v4.0 | Odoo 17 Enterprise</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--border:#21262d;--text:#e6edf3;--muted:#8b949e;--white:#fff;
+  --mat:#06b6d4;--plan:#7c3aed;--com:#f97316;--inv:#f59e0b;--sub:#ef4444;--cont:#22c55e;--prod:#ec4899;
+  --zoom:1;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);font-family:'IBM Plex Sans',sans-serif;color:var(--text);padding:20px 16px 60px;
+  background-image:
+    radial-gradient(ellipse at 10% 5%,rgba(6,182,212,.09) 0%,transparent 40%),
+    radial-gradient(ellipse at 90% 15%,rgba(249,115,22,.07) 0%,transparent 40%),
+    radial-gradient(ellipse at 50% 90%,rgba(239,68,68,.05) 0%,transparent 50%),
+    radial-gradient(ellipse at 75% 55%,rgba(124,58,237,.04) 0%,transparent 40%);
+  min-height:100vh;
+  transition:padding .3s;
+}
+body.presentation-mode{padding:0;overflow:hidden}
+
+/* ========== FEATURE TOGGLES BAR ========== */
+.features-bar{
+  position:fixed;top:16px;right:16px;z-index:1000;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;display:flex;flex-direction:column;gap:8px;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+  max-height:90vh;overflow-y:auto;
+}
+.features-bar.collapsed{padding:8px}
+.features-bar.collapsed .toggle-group{display:none}
+.toggle-header{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--mat);
+  letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;
+  padding-bottom:8px;border-bottom:1px solid var(--border);
+}
+.toggle-header:hover{color:var(--white)}
+.collapse-btn{
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:14px;padding:0;transition:color .2s;
+}
+.collapse-btn:hover{color:var(--mat)}
+.toggle-group{display:flex;flex-direction:column;gap:6px}
+.toggle-item{
+  display:flex;align-items:center;gap:8px;
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--muted);
+  cursor:pointer;padding:4px 6px;border-radius:4px;transition:all .2s;
+}
+.toggle-item:hover{background:rgba(6,182,212,.08);color:var(--text)}
+.toggle-item.active{background:rgba(6,182,212,.15);color:var(--mat)}
+.toggle-switch{
+  width:32px;height:16px;background:var(--border);border-radius:8px;
+  position:relative;transition:background .2s;flex-shrink:0;
+}
+.toggle-item.active .toggle-switch{background:var(--mat)}
+.toggle-switch::after{
+  content:'';position:absolute;left:2px;top:2px;
+  width:12px;height:12px;background:var(--text);border-radius:50%;
+  transition:left .2s;
+}
+.toggle-item.active .toggle-switch::after{left:18px}
+.toggle-label{flex:1}
+
+/* ========== ANALYTICS PANEL (#3) ========== */
+.analytics-panel{
+  position:fixed;left:16px;top:16px;z-index:900;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:14px 16px;width:320px;max-height:80vh;overflow-y:auto;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+  display:none;
+}
+.analytics-panel.active{display:block}
+.panel-title{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--mat);
+  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;
+  padding-bottom:8px;border-bottom:1px solid var(--border);
+}
+.stat-group{margin-bottom:14px}
+.stat-label{
+  font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;
+}
+.stat-value{
+  font-size:22px;font-weight:700;color:var(--white);
+  font-family:'IBM Plex Mono',monospace;
+}
+.stat-detail{
+  font-size:9px;color:var(--muted);margin-top:2px;
+  font-family:'IBM Plex Mono',monospace;
+}
+.bottleneck-list{margin-top:8px}
+.bottleneck-item{
+  padding:6px 8px;background:rgba(239,68,68,.1);
+  border-left:2px solid var(--sub);border-radius:3px;margin-bottom:4px;
+}
+.bottleneck-step{
+  font-size:10px;font-weight:600;color:var(--white);margin-bottom:2px;
+}
+.bottleneck-reason{
+  font-size:9px;color:var(--muted);
+  font-family:'IBM Plex Mono',monospace;
+}
+.heatmap-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:8px;
+}
+.heatmap-cell{
+  aspect-ratio:1;border-radius:4px;display:flex;align-items:center;
+  justify-content:center;font-size:9px;font-weight:600;
+  font-family:'IBM Plex Mono',monospace;cursor:pointer;
+  transition:transform .2s;
+}
+.heatmap-cell:hover{transform:scale(1.05)}
+.heatmap-cell.heat-1{background:rgba(6,182,212,.2);color:var(--mat)}
+.heatmap-cell.heat-2{background:rgba(124,58,237,.25);color:var(--plan)}
+.heatmap-cell.heat-3{background:rgba(239,68,68,.3);color:var(--sub)}
+.heatmap-cell.heat-4{background:rgba(245,158,11,.25);color:var(--inv)}
+.heatmap-cell.heat-5{background:rgba(236,72,153,.35);color:var(--prod)}
+
+/* ========== PRESENTATION MODE (#4) ========== */
+body.presentation-mode .routebar,
+body.presentation-mode .features-bar,
+body.presentation-mode .analytics-panel,
+body.presentation-mode .context-panel,
+body.presentation-mode .minimap{display:none}
+body.presentation-mode .diagram{max-width:none;margin:0;padding:20px}
+.presentation-controls{
+  display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:10px 16px;z-index:1001;gap:10px;align-items:center;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);
+}
+body.presentation-mode .presentation-controls{display:flex}
+.pres-btn{
+  background:rgba(6,182,212,.15);border:1px solid var(--mat);color:var(--mat);
+  padding:6px 12px;border-radius:4px;font-family:'IBM Plex Mono',monospace;
+  font-size:10px;cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+.pres-btn:hover{background:rgba(6,182,212,.25);color:var(--white)}
+.pres-info{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);
+  padding:0 12px;border-left:1px solid var(--border);
+  border-right:1px solid var(--border);
+}
+
+/* ========== CONTEXT PANEL (#5) ========== */
+.context-panel{
+  position:fixed;right:370px;top:50%;transform:translateY(-50%);
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:14px 16px;width:300px;max-height:70vh;overflow-y:auto;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:850;
+  display:none;pointer-events:none;
+}
+.context-panel.active{display:block}
+.context-step-title{
+  font-size:11px;font-weight:700;color:var(--white);margin-bottom:8px;
+  padding-bottom:6px;border-bottom:1px solid var(--border);
+}
+.context-section{margin-bottom:12px}
+.context-label{
+  font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--mat);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;
+}
+.context-content{
+  font-size:9.5px;color:var(--muted);line-height:1.5;
+}
+.context-tag{
+  display:inline-block;padding:2px 6px;background:rgba(6,182,212,.1);
+  border:1px solid rgba(6,182,212,.3);border-radius:3px;
+  font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--mat);
+  margin:2px 2px 2px 0;
+}
+.context-cite{
+  font-style:italic;color:var(--text);background:rgba(124,58,237,.08);
+  padding:6px 8px;border-left:2px solid var(--plan);border-radius:3px;
+  font-size:9px;margin-top:6px;display:block;
+}
+.context-link{
+  color:var(--mat);text-decoration:none;border-bottom:1px dashed var(--mat);
+  transition:color .2s;
+}
+.context-link:hover{color:var(--white)}
+
+/* ========== MINIMAP & ZOOM (#6) ========== */
+.minimap{
+  position:fixed;right:16px;bottom:16px;z-index:900;
+  background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:8px;width:180px;display:none;
+}
+.minimap.active{display:block}
+.minimap-title{
+  font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;
+}
+.minimap-canvas{
+  width:100%;height:120px;background:rgba(0,0,0,.3);border-radius:4px;
+  position:relative;overflow:hidden;
+}
+.minimap-step{
+  position:absolute;width:16px;height:8px;border-radius:2px;
+  cursor:pointer;transition:transform .2s;
+}
+.minimap-step:hover{transform:scale(1.2)}
+.minimap-step.current{box-shadow:0 0 6px var(--mat)}
+.zoom-controls{
+  display:flex;gap:4px;margin-top:6px;justify-content:center;
+}
+.zoom-btn{
+  background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+  width:26px;height:26px;border-radius:4px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:all .2s;
+}
+.zoom-btn:hover{background:var(--border);color:var(--white)}
+.diagram-wrapper{
+  transform-origin:top left;transition:transform .3s;
+}
+
+/* ========== FILTERS (#7) ========== */
+.filters-panel{
+  position:fixed;left:16px;bottom:16px;z-index:900;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:12px 14px;width:280px;display:none;
+}
+.filters-panel.active{display:block}
+.filter-group{margin-bottom:10px}
+.filter-title{
+  font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mat);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;
+}
+.filter-option{
+  display:flex;align-items:center;gap:6px;margin-bottom:4px;
+  font-size:9.5px;color:var(--muted);cursor:pointer;padding:3px 4px;
+  border-radius:3px;transition:background .2s;
+}
+.filter-option:hover{background:rgba(6,182,212,.08)}
+.filter-option.active{background:rgba(6,182,212,.15);color:var(--mat)}
+.filter-checkbox{
+  width:12px;height:12px;border:1px solid var(--border);
+  border-radius:2px;position:relative;flex-shrink:0;
+}
+.filter-option.active .filter-checkbox{
+  background:var(--mat);border-color:var(--mat);
+}
+.filter-option.active .filter-checkbox::after{
+  content:'✓';position:absolute;top:-2px;left:1px;
+  font-size:10px;color:var(--bg);
+}
+.card.filtered-out{opacity:.2;pointer-events:none}
+.card.highlighted{box-shadow:0 0 12px var(--mat);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 12px var(--mat)}50%{box-shadow:0 0 20px var(--mat)}}
+
+/* ========== BREADCRUMB ENHANCEMENT ========== */
+.breadcrumb{
+  display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;
+  font-size:10px;color:var(--muted);
+}
+.breadcrumb-item{transition:color .2s}
+.breadcrumb-item.active{color:var(--mat);font-weight:600}
+.breadcrumb-sep{opacity:.4}
+
+/* ========== ORIGINAL STYLES (preserved) ========== */
+.routebar{max-width:1700px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.routebar-left{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px}
+.routebar a{color:var(--mat);text-decoration:none;border:1px solid rgba(6,182,212,.4);padding:4px 10px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:11px;transition:all .15s}
+.routebar a:hover{background:rgba(6,182,212,.1);border-color:var(--mat)}
+.routebar-right{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);opacity:.7}
+.crumb-sep{color:var(--muted);opacity:.4}
+.crumb-active{color:var(--com);font-weight:600}
+
+header.page{text-align:center;margin-bottom:24px;max-width:1700px;margin-left:auto;margin-right:auto}
+.badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--com);border:1px solid var(--com);padding:3px 12px;border-radius:2px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.version-badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);border:1px solid var(--border);padding:2px 8px;border-radius:2px;letter-spacing:1px;margin-left:8px;vertical-align:middle}
+header.page h1{font-size:clamp(18px,3vw,30px);font-weight:700;color:var(--white)}
+header.page h1 span{color:var(--com)}
+header.page p{color:var(--muted);font-size:13px;margin-top:6px;font-family:'IBM Plex Mono',monospace}
+
+.legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:0 auto 22px;max-width:1100px}
+.legend-item{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+.intro-note{
+  max-width:880px;margin:0 auto 22px;
+  border:1px solid rgba(6,182,212,.30);background:rgba(6,182,212,.06);
+  border-radius:8px;padding:11px 16px;
+  font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;line-height:1.7;
+}
+.intro-note strong{color:var(--mat)}
+.arch-note{
+  max-width:880px;margin:0 auto 24px;
+  border:1px solid rgba(249,115,22,.35);background:rgba(249,115,22,.07);
+  border-radius:8px;padding:11px 16px;
+  font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;line-height:1.7;
+}
+.arch-note strong{color:var(--com)}
+
+.overview-wrap{max-width:1700px;margin:0 auto}
+.section-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:3px;margin:28px 0 14px;text-align:center}
+
+.macro-flow{
+  display:flex;align-items:stretch;justify-content:center;gap:8px;flex-wrap:wrap;
+  max-width:1700px;margin:0 auto 20px;padding:22px 18px;
+  border:1px solid var(--border);background:var(--surface);border-radius:12px;
+  position:relative;
+}
+.macro-step{
+  position:relative;flex:1;min-width:165px;max-width:235px;
+  padding:13px 12px;border:1px solid;border-radius:8px;
+  cursor:pointer;transition:all .2s;text-decoration:none;color:inherit;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.macro-step:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.macro-step.p1{border-color:rgba(6,182,212,.5);background:rgba(6,182,212,.07)}
+.macro-step.p1:hover{background:rgba(6,182,212,.14);border-color:var(--mat)}
+.macro-step.p2{border-color:rgba(124,58,237,.5);background:rgba(124,58,237,.07)}
+.macro-step.p2:hover{background:rgba(124,58,237,.14);border-color:var(--plan)}
+.macro-step.p3{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.07)}
+.macro-step.p3:hover{background:rgba(239,68,68,.14);border-color:var(--sub)}
+.macro-step.p4{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.07)}
+.macro-step.p4:hover{background:rgba(245,158,11,.14);border-color:var(--inv)}
+.macro-step.p5{border-color:rgba(236,72,153,.5);background:rgba(236,72,153,.07)}
+.macro-step.p5:hover{background:rgba(236,72,153,.14);border-color:var(--prod)}
+
+.macro-code{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1.5px;margin-bottom:5px}
+.macro-step.p1 .macro-code{color:var(--mat)}
+.macro-step.p2 .macro-code{color:var(--plan)}
+.macro-step.p3 .macro-code{color:var(--sub)}
+.macro-step.p4 .macro-code{color:var(--inv)}
+.macro-step.p5 .macro-code{color:var(--prod)}
+.macro-name{font-size:12.5px;font-weight:700;color:var(--white);line-height:1.3}
+.macro-hint{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:8px;opacity:.75}
+.macro-arrow{display:flex;align-items:center;color:var(--muted);font-size:18px;opacity:.5;user-select:none}
+.loop-hint{
+  max-width:1100px;margin:12px auto 0;text-align:center;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--prod);
+  padding:8px 14px;border:1px dashed rgba(236,72,153,.4);background:rgba(236,72,153,.06);border-radius:6px;
+}
+
+.pgrid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px;
+  max-width:1700px;margin:0 auto;
+}
+.pcard{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 18px 16px;
+  cursor:pointer;text-decoration:none;color:inherit;transition:all .2s;
+  display:flex;flex-direction:column;position:relative;overflow:hidden;
+}
+.pcard::before{
+  content:'';position:absolute;top:0;left:0;width:4px;height:100%;
+}
+.pcard.p1::before{background:var(--mat)}
+.pcard.p2::before{background:var(--plan)}
+.pcard.p3::before{background:var(--sub)}
+.pcard.p4::before{background:var(--inv)}
+.pcard.p5::before{background:var(--prod)}
+.pcard:hover{border-color:var(--mat);transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.pcard.p1:hover{border-color:var(--mat)}
+.pcard.p2:hover{border-color:var(--plan)}
+.pcard.p3:hover{border-color:var(--sub)}
+.pcard.p4:hover{border-color:var(--inv)}
+.pcard.p5:hover{border-color:var(--prod)}
+
+.pcard-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;padding-left:8px}
+.pcard-code{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:1.5px}
+.pcard.p1 .pcard-code{color:var(--mat)}
+.pcard.p2 .pcard-code{color:var(--plan)}
+.pcard.p3 .pcard-code{color:var(--sub)}
+.pcard.p4 .pcard-code{color:var(--inv)}
+.pcard.p5 .pcard-code{color:var(--prod)}
+.pcard-type{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);padding:1px 6px;border-radius:2px;border:1px solid var(--border);text-transform:uppercase;letter-spacing:1px}
+.pcard-title{font-size:15px;font-weight:700;color:var(--white);margin-bottom:10px;line-height:1.35;padding-left:8px}
+.pcard-desc{font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:14px;padding-left:8px;flex:1}
+.pcard-desc em{color:var(--text);font-style:normal;font-weight:600}
+
+.pcard-meta{
+  display:flex;flex-wrap:wrap;gap:10px;padding:10px 8px 0;border-top:1px solid var(--border);
+  font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);
+}
+.meta-group{display:flex;align-items:center;gap:6px}
+.meta-label{opacity:.65}
+.meta-value{color:var(--text);font-weight:600}
+
+.pcard-lanes{display:flex;gap:4px;padding:10px 8px 0;flex-wrap:wrap}
+.lane-chip{display:inline-flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;padding:2px 6px;border-radius:2px;border:1px solid}
+.lane-chip.mat{color:var(--mat);border-color:rgba(6,182,212,.4);background:rgba(6,182,212,.08)}
+.lane-chip.plan{color:var(--plan);border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.08)}
+.lane-chip.com{color:var(--com);border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.08)}
+.lane-chip.inv{color:var(--inv);border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08)}
+.lane-chip.sub{color:var(--sub);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08)}
+.lane-chip.cont{color:var(--cont);border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.08)}
+.lane-chip.prod{color:var(--prod);border-color:rgba(236,72,153,.4);background:rgba(236,72,153,.08)}
+
+.pcard-cta{margin-top:12px;padding:0 8px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:1px}
+.pcard.p1 .pcard-cta{color:var(--mat)}
+.pcard.p2 .pcard-cta{color:var(--plan)}
+.pcard.p3 .pcard-cta{color:var(--sub)}
+.pcard.p4 .pcard-cta{color:var(--inv)}
+.pcard.p5 .pcard-cta{color:var(--prod)}
+
+.p6-note{
+  max-width:1100px;margin:24px auto 0;padding:12px 16px;
+  background:rgba(34,197,94,.05);border:1px dashed rgba(34,197,94,.35);border-radius:8px;
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);text-align:center;line-height:1.6;
+}
+.p6-note strong{color:var(--cont);letter-spacing:1px}
+
+.diagram{max-width:1700px;margin:0 auto;overflow-x:auto}
+.diagram-rel{position:relative}
+
+.sw{display:grid;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+
+.hdr{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 3px;gap:2px;
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;letter-spacing:1px;
+  text-transform:uppercase;border-bottom:2px solid;text-align:center;line-height:1.3}
+.hdr-corner{background:var(--surface);border-bottom:2px solid var(--border);border-right:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.hdr-mat   {background:rgba(6,182,212,.12); color:var(--mat); border-color:var(--mat); border-right:1px solid var(--border)}
+.hdr-plan  {background:rgba(124,58,237,.12);color:var(--plan);border-color:var(--plan);border-right:1px solid var(--border)}
+.hdr-com   {background:rgba(249,115,22,.12);color:var(--com); border-color:var(--com); border-right:1px solid var(--border)}
+.hdr-inv   {background:rgba(245,158,11,.10);color:var(--inv); border-color:var(--inv); border-right:1px solid var(--border)}
+.hdr-sub   {background:rgba(239,68,68,.12); color:var(--sub); border-color:var(--sub); border-right:1px solid var(--border)}
+.hdr-cont  {background:rgba(34,197,94,.10); color:var(--cont);border-color:var(--cont);border-right:1px solid var(--border)}
+.hdr-prod  {background:rgba(236,72,153,.12);color:var(--prod);border-color:var(--prod)}
+.hdr-last  {border-right:none}
+
+.sl{background:var(--surface);border-right:1px solid var(--border);border-bottom:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 3px;
+  text-align:center;font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);line-height:1.4}
+.sl strong{font-size:15px;font-weight:700;display:block;margin-bottom:2px}
+
+.lc{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:10px 7px;
+  display:flex;align-items:center;justify-content:center;min-height:115px;flex-direction:column;gap:6px}
+.lc.mat-bg {background:rgba(6,182,212,.03)}
+.lc.plan-bg{background:rgba(124,58,237,.03)}
+.lc.com-bg {background:rgba(249,115,22,.03)}
+.lc.inv-bg {background:rgba(245,158,11,.03)}
+.lc.sub-bg {background:rgba(239,68,68,.03)}
+.lc.cont-bg{background:rgba(34,197,94,.03)}
+.lc.prod-bg{background:rgba(236,72,153,.03)}
+.lc.sub-row{background:rgba(239,68,68,.05)}
+.lc.prod-row{background:rgba(236,72,153,.05)}
+.lc.last-col{border-right:none}
+
+.ar{border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;height:30px;position:relative}
+.ar.mat-bg {background:rgba(6,182,212,.02); border-right:1px solid var(--border)}
+.ar.plan-bg{background:rgba(124,58,237,.02);border-right:1px solid var(--border)}
+.ar.com-bg {background:rgba(249,115,22,.02);border-right:1px solid var(--border)}
+.ar.inv-bg {background:rgba(245,158,11,.02);border-right:1px solid var(--border)}
+.ar.sub-bg {background:rgba(239,68,68,.02); border-right:1px solid var(--border)}
+.ar.cont-bg{background:rgba(34,197,94,.02); border-right:1px solid var(--border)}
+.ar.prod-bg{background:rgba(236,72,153,.02)}
+.ar.last-col{border-right:none}
+.ar-corner{background:var(--surface);border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+
+.varr{display:flex;flex-direction:column;align-items:center;height:30px}
+.varr .sh{width:2px;flex:1}
+.varr .hd{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent}
+.varr.mat .sh{background:var(--mat)}    .varr.mat .hd{border-top:7px solid var(--mat)}
+.varr.plan .sh{background:var(--plan)}  .varr.plan .hd{border-top:7px solid var(--plan)}
+.varr.com .sh{background:var(--com)}    .varr.com .hd{border-top:7px solid var(--com)}
+.varr.inv .sh{background:var(--inv)}    .varr.inv .hd{border-top:7px solid var(--inv)}
+.varr.sub .sh{background:var(--sub)}    .varr.sub .hd{border-top:7px solid var(--sub)}
+.varr.cont .sh{background:var(--cont)}  .varr.cont .hd{border-top:7px solid var(--cont)}
+.varr.prod .sh{background:var(--prod)}  .varr.prod .hd{border-top:7px solid var(--prod)}
+
+.no-bot{border-bottom:none!important}
+
+.divider-row{
+  grid-column:1/-1;
+  background:rgba(249,115,22,.08);
+  border-top:1px dashed rgba(249,115,22,.4);
+  border-bottom:1px dashed rgba(249,115,22,.4);
+  padding:6px 14px;
+  display:flex;align-items:center;gap:8px;
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;
+  color:var(--com);letter-spacing:1.5px;text-transform:uppercase;
+}
+.divider-row::before{content:'⬡';font-size:11px}
+.divider-row.phys{background:rgba(239,68,68,.08);border-top-color:rgba(239,68,68,.4);border-bottom-color:rgba(239,68,68,.4);color:var(--sub)}
+.divider-row.phys::before{content:'⇄'}
+.divider-row.end{background:rgba(34,197,94,.06);border-top-color:rgba(34,197,94,.3);border-bottom-color:rgba(34,197,94,.3);color:var(--cont)}
+.divider-row.end::before{content:'▶'}
+.divider-row.loop{background:rgba(236,72,153,.07);border-top-color:rgba(236,72,153,.4);border-bottom-color:rgba(236,72,153,.4);color:var(--prod)}
+.divider-row.loop::before{content:'↻'}
+
+.card{width:100%;border-radius:7px;padding:10px 10px;border:1px solid;animation:popIn .4s ease both;transition:all .3s;cursor:pointer}
+@keyframes popIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.card.mat   {border-color:rgba(6,182,212,.55);background:rgba(6,182,212,.10)}
+.card.mat2  {border-color:rgba(6,182,212,.4); background:rgba(6,182,212,.07)}
+.card.mat3  {border-color:rgba(6,182,212,.3); background:rgba(6,182,212,.05)}
+.card.plan  {border-color:rgba(124,58,237,.5);background:rgba(124,58,237,.10)}
+.card.plan2 {border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.07)}
+.card.com   {border-color:rgba(249,115,22,.5);background:rgba(249,115,22,.10)}
+.card.com2  {border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.07)}
+.card.inv   {border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.10)}
+.card.inv2  {border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.07)}
+.card.sub   {border-color:rgba(239,68,68,.55);background:rgba(239,68,68,.10)}
+.card.sub2  {border-color:rgba(239,68,68,.4); background:rgba(239,68,68,.07)}
+.card.sub3  {border-color:rgba(239,68,68,.3); background:rgba(239,68,68,.05)}
+.card.cont  {border-color:rgba(34,197,94,.5); background:rgba(34,197,94,.10)}
+.card.cont2 {border-color:rgba(34,197,94,.4); background:rgba(34,197,94,.07)}
+.card.prod  {border-color:rgba(236,72,153,.55);background:rgba(236,72,153,.10)}
+.card.prod2 {border-color:rgba(236,72,153,.4); background:rgba(236,72,153,.07)}
+
+.card-title{font-size:10.5px;font-weight:700;color:var(--white);margin-bottom:4px;line-height:1.3}
+.card-desc {font-size:9.5px;color:var(--muted);line-height:1.5}
+.card-desc em{color:var(--text);font-style:normal;font-weight:600}
+.card-tags {display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.ctag{font-family:'IBM Plex Mono',monospace;font-size:8.5px;padding:1px 4px;border-radius:2px;border:1px solid}
+.ctag.rq{border-color:rgba(6,182,212,.4);background:rgba(6,182,212,.08);color:var(--mat)}
+.ctag.dev{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08);color:var(--sub)}
+.ctag.oca{border-color:rgba(99,102,241,.4);background:rgba(99,102,241,.08);color:#a5b4fc}
+.ctag.nat{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.08);color:var(--cont)}
+.ctag.gen{border-color:rgba(139,148,158,.3);background:rgba(139,148,158,.06);color:var(--muted)}
+
+.cite{
+  display:block;font-style:italic;color:var(--text);background:rgba(124,58,237,.08);
+  padding:6px 8px;border-left:2px solid var(--plan);border-radius:3px;
+  font-size:9px;margin-top:6px;line-height:1.5;
+}
+.auto-pill{
+  display:inline-block;padding:4px 8px;border-radius:4px;border:1px solid;
+  font-family:'IBM Plex Mono',monospace;font-size:9px;margin-top:6px;line-height:1.4;
+}
+.auto-pill.auto-mat{border-color:rgba(6,182,212,.4);background:rgba(6,182,212,.1);color:var(--mat)}
+.auto-pill.auto-com{border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.1);color:var(--com)}
+.auto-pill.auto-plan{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.1);color:var(--plan)}
+.auto-pill.auto-inv{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.1);color:var(--inv)}
+
+.ov{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+
+</style>
+</head>
+<body>
+
+<!-- FEATURES TOGGLES BAR -->
+<div class="features-bar" id="featuresBar">
+  <div class="toggle-header" onclick="toggleFeatureBar()">
+    <span>⚙ Features</span>
+    <button class="collapse-btn" id="collapseBtn">▼</button>
+  </div>
+  <div class="toggle-group">
+    <div class="toggle-item" id="toggle-analytics" onclick="toggleFeature('analytics')">
+      <div class="toggle-switch"></div>
+      <div class="toggle-label">Vista de Análisis</div>
+    </div>
+    <div class="toggle-item" id="toggle-presentation" onclick="toggleFeature('presentation')">
+      <div class="toggle-switch"></div>
+      <div class="toggle-label">Modo Presentación</div>
+    </div>
+    <div class="toggle-item" id="toggle-context" onclick="toggleFeature('context')">
+      <div class="toggle-switch"></div>
+      <div class="toggle-label">Panel de Contexto</div>
+    </div>
+    <div class="toggle-item" id="toggle-minimap" onclick="toggleFeature('minimap')">
+      <div class="toggle-switch"></div>
+      <div class="toggle-label">Minimap + Zoom</div>
+    </div>
+    <div class="toggle-item" id="toggle-filters" onclick="toggleFeature('filters')">
+      <div class="toggle-switch"></div>
+      <div class="toggle-label">Filtros y Vistas</div>
+    </div>
+  </div>
+</div>
+
+<!-- ANALYTICS PANEL (#3) -->
+<div class="analytics-panel" id="analyticsPanel">
+  <div class="panel-title">📊 Vista de Análisis</div>
+  <div class="stat-group">
+    <div class="stat-label">Proceso actual</div>
+    <div class="stat-value" id="currentProcessCode">—</div>
+    <div class="stat-detail" id="currentProcessName">Seleccioná un proceso</div>
+  </div>
+  <div class="stat-group">
+    <div class="stat-label">Pasos totales</div>
+    <div class="stat-value" id="totalSteps">0</div>
+    <div class="stat-detail" id="stepsByLane">—</div>
+  </div>
+  <div class="stat-group">
+    <div class="stat-label">Cuellos de botella</div>
+    <div class="bottleneck-list" id="bottleneckList"></div>
+  </div>
+  <div class="stat-group">
+    <div class="stat-label">Mapa de calor de procesos</div>
+    <div class="heatmap-grid" id="heatmapGrid"></div>
+  </div>
+</div>
+
+<!-- CONTEXT PANEL (#5) -->
+<div class="context-panel" id="contextPanel">
+  <div class="context-step-title" id="contextTitle">—</div>
+  <div class="context-section">
+    <div class="context-label">Descripción</div>
+    <div class="context-content" id="contextDesc">—</div>
+  </div>
+  <div class="context-section">
+    <div class="context-label">Requisitos y Tags</div>
+    <div class="context-content" id="contextTags">—</div>
+  </div>
+  <div class="context-section" id="contextCiteSection" style="display:none">
+    <div class="context-label">Cita de relevamiento</div>
+    <div class="context-cite" id="contextCite">—</div>
+  </div>
+  <div class="context-section">
+    <div class="context-label">Ver en MF</div>
+    <div class="context-content">
+      <a href="#" class="context-link" id="contextMfLink" target="_blank">Abrir documento de Modelo Funcional →</a>
+    </div>
+  </div>
+</div>
+
+<!-- MINIMAP (#6) -->
+<div class="minimap" id="minimapPanel">
+  <div class="minimap-title">Minimap del proceso</div>
+  <div class="minimap-canvas" id="minimapCanvas"></div>
+  <div class="zoom-controls">
+    <button class="zoom-btn" onclick="zoom('out')">−</button>
+    <button class="zoom-btn" onclick="zoom('reset')">⊙</button>
+    <button class="zoom-btn" onclick="zoom('in')">+</button>
+  </div>
+</div>
+
+<!-- FILTERS PANEL (#7) -->
+<div class="filters-panel" id="filtersPanel">
+  <div class="filter-group">
+    <div class="filter-title">Mostrar solo</div>
+    <div class="filter-option" id="filter-dev" onclick="toggleFilter('dev')">
+      <div class="filter-checkbox"></div>
+      <span>Pasos con desarrollo</span>
+    </div>
+    <div class="filter-option" id="filter-oca" onclick="toggleFilter('oca')">
+      <div class="filter-checkbox"></div>
+      <span>Pasos con módulos OCA</span>
+    </div>
+    <div class="filter-option" id="filter-critical" onclick="toggleFilter('critical')">
+      <div class="filter-checkbox"></div>
+      <span>Pasos críticos (alta conectividad)</span>
+    </div>
+  </div>
+  <div class="filter-group">
+    <div class="filter-title">Agrupar por</div>
+    <div class="filter-option" id="filter-lane-mat" onclick="toggleFilter('lane-mat')">
+      <div class="filter-checkbox"></div>
+      <span>Solo Matricería</span>
+    </div>
+    <div class="filter-option" id="filter-lane-plan" onclick="toggleFilter('lane-plan')">
+      <div class="filter-checkbox"></div>
+      <span>Solo Planificación</span>
+    </div>
+    <div class="filter-option" id="filter-lane-com" onclick="toggleFilter('lane-com')">
+      <div class="filter-checkbox"></div>
+      <span>Solo Compras</span>
+    </div>
+  </div>
+</div>
+
+<!-- PRESENTATION CONTROLS (#4) -->
+<div class="presentation-controls">
+  <button class="pres-btn" onclick="presentationNav('prev')">◀ Anterior</button>
+  <div class="pres-info" id="presInfo">Proceso 1 / 5</div>
+  <button class="pres-btn" onclick="presentationNav('next')">Siguiente ▶</button>
+  <button class="pres-btn" onclick="presentationNav('exit')">Salir [ESC]</button>
+</div>
+
+<div id="app"></div>
+
+<script>
+/* ================================================================= */
+/* CONSTANTS & DATA                                                  */
+/* ================================================================= */
+
+const LANES = {
+  mat:  { name: 'Matricería',      color: 'mat'  },
+  plan: { name: 'Planificación',   color: 'plan' },
+  com:  { name: 'Compras',         color: 'com'  },
+  inv:  { name: 'Inventarios / WMS',     color: 'inv'  },
+  sub:  { name: 'Subcontratación', color: 'sub'  },
+  cont: { name: 'Contabilidad',    color: 'cont' },
+  prod: { name: 'Producción',      color: 'prod' }
+};
+
+const PROCESSES = {
+  p1: {
+    code: 'P-MAT-1',
+    name: 'Alta de Molde y Estructura de BOM Multinivel',
+    shortName: 'Alta de Molde',
+    type: 'Principal',
+    rqRange: 'RQ-MAT-01 a 16',
+    rqCount: 16,
+    description: 'Creación del producto molde maestro y sus 50-300 posiciones (semi-elaborados) con BOMs multinivel. El molde "nace" antes de iniciar la fabricación física.',
+    shortDesc: 'Producto molde + posiciones + BOMs',
+    inputs: 'Pedido de cliente o necesidad interna · diseño y carpeta DonPC · convenciones de codificación (MF Ingeniería v3.0) · política contable del molde (MF Contabilidad v5.0)',
+    outputs: 'Producto molde P### + 50-300 posiciones P###-NN + BOMs multinivel → MRP (MF Planificación v4.0) · maestro de moldes actualizado (mrp_tool_tracking)',
+    lanes: ['mat','plan','com'],
+    intro: 'Este proceso arranca cuando hay confirmación de proyecto de molde. Cita de Ignacio: "sin haber terminado ya nació el producto". Fernando Abal crea el molde como producto <em>P###</em> (código de 3 dígitos secuencial), luego crea entre 50 y 300 posiciones (semi-elaborados) con código <em>P###-NN</em>, y arma la estructura de BOMs multinivel desde posiciones hasta el molde padre.',
+    archNote: 'INPUTS — pedido de cliente o necesidad interna · diseño DonPC · convenciones de codificación (MF Ingeniería v3.0) · política contable (MF Contabilidad v5.0). OUTPUTS — producto molde P### + posiciones P###-NN + BOMs multinivel → MRP (MF Planificación v4.0) · maestro de moldes (mrp_tool_tracking). MÓDULOS — <strong>mrp_bom_hierarchy</strong> (OCA 17.0) para navegación multinivel. ARQUITECTURA — El molde y sus posiciones se modelan como <strong>productos almacenables</strong> con ruta <em>Manufacture</em>. Las rutas detalladas permanecen en <strong>DonPC</strong> en Etapa 1; en Etapa 2 podrán migrarse a <em>mrp.routing</em>. GOBIERNO — El alta, baja y modificaciones del Maestro de Moldes es responsabilidad de Matricería (decisión cross-área 30/04/2026).',
+    steps: [
+      { n: '01', label: 'Decisión de inicio', lane: 'mat', variant: 'mat',
+        title: 'Confirmación de proyecto de molde',
+        desc: 'Llega pedido de cliente o necesidad interna. Ignacio y Fernando evalúan factibilidad y se aprueba el inicio del proyecto de molde. Se asigna código <em>P###</em>.',
+        tags: ['RQ-MAT-05', 'inicio proyecto'],
+        cite: '"Sin haber terminado ya nació el producto" — Ignacio'
+      },
+      { n: '02', label: 'Alta producto molde', lane: 'mat', variant: 'mat',
+        title: 'Creación del producto molde',
+        desc: 'Fernando crea el molde como producto (<em>product.template</em>) tipo Almacenable, ruta Manufacture, código <em>P321</em>. El producto nace antes de la fabricación.',
+        tags: ['RQ-MAT-01', 'product.template', 'ruta Manufacture']
+      },
+      { n: '03', label: 'Atributos extendidos', lane: 'mat', variant: 'mat2',
+        title: 'Atributos técnicos del molde',
+        desc: 'Se completan campos específicos: cliente, tipo de molde, estado, plazo estimado, referencia a plano. Coordinación con <em>mrp_tool_tracking</em> (DEV-PLA-03).',
+        tags: ['RQ-MAT-02', 'DEV-MAT-01 (cond.)', 'DEV-PLA-03']
+      },
+      { n: '04', label: 'Rol maestro productos', lane: 'mat', variant: 'mat3',
+        title: 'Control de permisos de creación',
+        desc: 'Solo Fernando Abal (grupo <em>Matricería / Maestro de Productos</em>) puede crear productos de tipo molde. Backup: Ignacio. Garantiza consistencia de datos maestros.',
+        tags: ['RQ-MAT-04', 'security group']
+      },
+      { divider: 'ESTRUCTURA MULTINIVEL — se generan las posiciones (semi-elaborados)' },
+      { n: '05', label: 'Creación posiciones', lane: 'mat', variant: 'mat',
+        title: 'Alta de 50-300 posiciones',
+        desc: 'Para cada posición del molde, Fernando crea un producto semi-elaborado con código <em>P321-NN</em>. Cada posición es un producto independiente con BOM y MO propias.',
+        tags: ['RQ-MAT-06', 'RQ-MAT-07', 'P###-NN'],
+        cite: '"Cada posición tiene su lista de materiales, su ruta, su orden de fabricación" — John / confirmado Fernando'
+      },
+      { n: '06', label: 'Tipo de posición', lane: 'mat', variant: 'mat2',
+        title: 'Clasificación por tipo',
+        desc: 'Tag o categoría según el tipo técnico: <em>cáncavo, placa, buje, columna, macho, cavidad</em>. Útil para reportes y plantillas de BOM.',
+        tags: ['RQ-MAT-08', 'categorías producto']
+      },
+      { divider: 'CONFIGURACIÓN DE BOMS — materiales y jerarquía' },
+      { n: '07', label: 'BOM por posición', lane: 'mat', variant: 'mat',
+        title: 'Lista de materiales de cada posición',
+        desc: 'Cada posición recibe su BOM con materiales: materia prima en bruto (acero), materiales estándar, y servicios subcontratados si aplica (ej: tratamiento térmico).',
+        tags: ['RQ-MAT-06', 'mrp.bom', 'multinivel']
+      },
+      { n: '08', label: 'Clasificación materiales', lane: 'mat', variant: 'mat2',
+        title: 'Bruto vs. estándar vs. dual',
+        desc: 'Criterio de Ignacio: <em>"todo lo que se pueda conseguir en una ferretería"</em> = estándar. Items duales (ej: cáncavo chico/grande) requieren decisión caso por caso.',
+        tags: ['RQ-MAT-12,13,14', 'RQ-MAT-15 gap'],
+        cite: '"Depende lo grande que sea el molde lo fabricamos nosotros" — Ignacio'
+      },
+      { n: '09', label: 'BOM del molde', lane: 'mat', variant: 'mat',
+        title: 'BOM jerárquica nivel superior',
+        desc: 'La BOM del producto molde (P321) lista como componentes <em>todas las posiciones</em> + materiales estándar para el ensamble final (tornillería, conexiones).',
+        tags: ['RQ-MAT-11', 'BOM multinivel', 'mrp_bom_hierarchy (OCA)']
+      },
+      { divider: 'VALIDACIÓN Y HABILITACIÓN DEL MRP' },
+      { n: '10', label: 'Navegación BOM', lane: 'mat', variant: 'mat3',
+        title: 'Verificación de estructura',
+        desc: 'Fernando revisa la estructura completa con el reporte BOM Structure. El módulo <em>mrp_bom_hierarchy</em> (OCA 17.0) facilita la navegación entre niveles.',
+        tags: ['RQ-MAT-11', 'BOM Structure Report']
+      },
+      { n: '11', label: 'Hoja de ruta (DonPC)', lane: 'mat', variant: 'mat3',
+        title: 'Rutas de fabricación',
+        desc: 'En Fase 1 la ruta detallada sigue en <em>DonPC</em>. Fernando trabaja en DonPC para definir torno, fresa, tratamientos. En Odoo no se crea <em>mrp.routing</em> (Etapa 2).',
+        tags: ['RQ-MAT-10', 'RQ-MAT-43', 'fuera alcance F1']
+      },
+      { n: '12', label: 'Habilitación MRP', lane: 'plan', variant: 'plan',
+        title: 'Estructura lista para scheduler',
+        desc: 'Con molde + posiciones + BOMs completas, la estructura queda disponible para que Planificación dispare el scheduler MRP multinivel y se inicie el abastecimiento (P-MAT-2).',
+        tags: ['mrp_multi_level (OCA)', 'handoff a P-MAT-2']
+      },
+      { divider: 'CIERRE DEL PROCESO — estructura consolidada en Odoo', type: 'end' },
+      { n: '13', label: 'Registro inicial compras', lane: 'com', variant: 'com2',
+        title: 'Visibilidad de demanda futura',
+        desc: 'Compras tiene visibilidad anticipada de la demanda que se generará al correrse el MRP. Permite anticipar conversaciones con proveedores de aceros.',
+        tags: ['visibilidad planificación', 'proveedores de aceros']
+      }
+    ],
+    arrows: [
+      { from: 4, to: 5, lane: 'mat', label: 'se crean posiciones' },
+      { from: 6, to: 7, lane: 'mat', label: 'BOM por posición' },
+      { from: 11, to: 12, lane: 'plan', label: 'estructura lista → MRP' }
+    ]
+  },
+
+  p2: {
+    code: 'P-MAT-2',
+    name: 'Explosión y Abastecimiento de Materiales',
+    shortName: 'Explosión y Abastecimiento',
+    type: 'Principal',
+    rqRange: 'RQ-MAT-17 a 31',
+    rqCount: 15,
+    description: 'El scheduler MRP recorre la estructura multinivel del molde y genera todas las necesidades de compra. Circuito de PRs/POs hasta la recepción física de materiales en el taller de Matricería.',
+    shortDesc: 'MRP multinivel + compras + recepción en planta',
+    inputs: 'Estructura molde + posiciones + BOMs (salida P-MAT-1) · maestro proveedores y lead times (MF Compras v3.0) · calendario taller (MF Planificación v4.0) · ubicaciones WMS (MF Inventario/WMS v3.0)',
+    outputs: 'Materiales en bruto y estándares recepcionados en taller → disponibles para P-MAT-4 · solicitudes de compra → MF Compras v3.0 (P-COM-3)',
+    lanes: ['mat','plan','com','inv'],
+    intro: 'Tras confirmar la estructura del molde (salida de P-MAT-1), se ejecuta el scheduler MRP multinivel que recorre la jerarquía (molde → posiciones → materiales) y calcula todas las necesidades de compra. El plazo típico desde la explosión hasta los primeros materiales recepcionados es de 15 a 20 días, dependiendo principalmente de lead times de proveedores de aceros.',
+    archNote: 'INPUTS — estructura molde + BOMs multinivel (P-MAT-1) · maestro proveedores (MF Compras v3.0) · calendario taller (MF Planificación v4.0). OUTPUTS — materiales recepcionados en taller → P-MAT-4 · solicitudes de compra → MF Compras P-COM-3. MÓDULOS — <strong>mrp_multi_level</strong> (OCA) scheduler multinivel · <strong>purchase_request</strong> (OCA) solicitud previa a PO · <strong>purchase_origin_link</strong> (OCA) trazabilidad PO↔Molde · <strong>stock_request</strong> (OCA, ya en Libus) transferencias internas.',
+    steps: [
+      { n: '01', label: 'Estructura confirmada', lane: 'mat', variant: 'mat',
+        title: 'Estructura del molde lista',
+        desc: 'Fernando Abal confirma que la estructura del molde <em>P321</em> está completa: todas las posiciones creadas, BOMs cargadas, clasificación de materiales aplicada.',
+        tags: ['RQ-MAT-17', 'handoff desde P-MAT-1']
+      },
+      { n: '02', label: 'MRP multinivel', lane: 'plan', variant: 'plan',
+        title: 'Ejecución del scheduler MRP',
+        desc: 'Se corre el MRP multinivel (<em>mrp_multi_level</em> OCA). Recorre la jerarquía desde el molde hasta los materiales, calcula necesidades netas considerando stock disponible, y genera procurement orders.',
+        tags: ['RQ-MAT-17', 'mrp_multi_level (OCA)', 'procurement'],
+        cite: '"Se emite toda la explosión de pedido de todos los materiales" — Fernando'
+      },
+      { n: '03', label: 'Necesidades por origen', lane: 'plan', variant: 'plan2',
+        title: 'Trazabilidad al molde origen',
+        desc: 'Cada necesidad generada conserva el <em>origin</em> al molde <em>P321</em>. Permite navegación bidireccional con <em>purchase_origin_link</em> (OCA).',
+        tags: ['RQ-MAT-19', 'origin=P321', 'purchase_origin_link']
+      },
+      { divider: 'CIRCUITO DE COMPRAS — las necesidades pasan al área de Compras' },
+      { n: '04', label: 'Purchase Requests', lane: 'com', variant: 'com2',
+        title: 'PRs generadas automáticamente',
+        desc: 'Por cada material, <em>purchase_request_procurement</em> (OCA) genera una Purchase Request. Las PR se agrupan por proveedor y llegan al área de Compras con referencia al molde.',
+        tags: ['RQ-MAT-22', 'purchase_request (OCA)', 'auto-agrupación'],
+        pill: { color: 'com', text: '⚡ PR creadas desde procurement automáticamente' }
+      },
+      { n: '05', label: 'Aprobación PR', lane: 'com', variant: 'com',
+        title: 'Revisión y aprobación',
+        desc: 'Compras revisa las PR, aplica workflow de <em>tier validation</em> según monto, y aprueba. Workflow configurado globalmente en MF Compras.',
+        tags: ['RQ-MAT-23', 'purchase_request_tier_validation']
+      },
+      { n: '06', label: 'Conversión a POs', lane: 'com', variant: 'com',
+        title: 'Generación de POs al proveedor',
+        desc: 'Compras convierte las PR aprobadas en Purchase Orders. Los datos <em>cuenta analítica=P321</em> y <em>origin</em> se propagan. Posible distribución entre varios moldes con <em>purchase_mrp_distribution</em>.',
+        tags: ['RQ-MAT-24', 'RQ-MAT-26', 'purchase_mrp_distribution (OCA)']
+      },
+      { divider: 'PLAZO DE ESPERA — 15 a 20 días según lead time del proveedor', type: 'phys' },
+      { n: '07', label: 'Seguimiento PO', lane: 'com', variant: 'com2',
+        title: 'Monitoreo de entregas',
+        desc: 'Compras monitorea las POs pendientes. <em>purchase_late_delivery_notification</em> (OCA, verificar 17.0) alerta sobre atrasos. Fernando consulta el estado desde el producto molde.',
+        tags: ['RQ-MAT-25', 'RQ-MAT-56', 'smart button molde→POs']
+      },
+      { n: '08', label: 'Recepción física', lane: 'inv', variant: 'inv',
+        title: 'Ingreso de materiales al depósito',
+        desc: 'Inventario valida la recepción contra la PO. Genera <em>stock.move</em> con trazabilidad al molde. Para aceros con traza de colada puede activarse lot tracking (RQ-MAT-29).',
+        tags: ['RQ-MAT-27', 'RQ-MAT-29 gap'],
+        cite: '"Empezamos a recepcionar los materiales en bruto" — Fernando'
+      },
+      { n: '09', label: 'Stock request', lane: 'inv', variant: 'inv2',
+        title: 'Transferencia a Matricería',
+        desc: 'Desde depósito central, el material se transfiere a la ubicación <em>Matricería/Stock</em>. El módulo <em>stock_request</em> (OCA, ya en Libus) permite solicitudes formales desde Matricería.',
+        tags: ['RQ-MAT-30', 'stock_request (OCA Libus)']
+      },
+      { divider: 'MATERIALES DISPONIBLES — listos para consumo en fabricación (handoff a P-MAT-4)', type: 'end' },
+      { n: '10', label: 'Disponibilidad', lane: 'mat', variant: 'mat',
+        title: 'Materiales en stock para consumo',
+        desc: 'Los materiales quedan disponibles en stock de Matricería. Las MOs de las posiciones pueden iniciarse a medida que cada una tenga sus materiales (disparador de P-MAT-4).',
+        tags: ['RQ-MAT-31', 'handoff a P-MAT-4', 'MO ready']
+      }
+    ],
+    arrows: [
+      { from: 0, to: 1, lane: 'plan', label: 'dispara MRP' },
+      { from: 2, to: 3, lane: 'com', label: 'necesidad → PR' },
+      { from: 5, to: 7, lane: 'com', label: 'PO enviada' },
+      { from: 7, to: 8, lane: 'inv', label: 'llegada material' },
+      { from: 8, to: 9, lane: 'inv', label: 'transferencia interna' },
+      { from: 9, to: 10, lane: 'mat', label: 'disponible' }
+    ]
+  },
+
+  p3: {
+    code: 'P-MAT-3',
+    name: 'Subcontratación de Operaciones Externas',
+    shortName: 'Subcontratación',
+    type: 'Principal',
+    rqRange: 'RQ-MAT-32 a 40',
+    rqCount: 9,
+    description: 'Una operación de la ruta de una posición no se ejecuta en planta (caso típico: tratamiento térmico de aceros). La pieza sale físicamente al proveedor, recibe el servicio, vuelve, y el costo se imputa a la MO + cuenta analítica del molde.',
+    shortDesc: 'Operaciones externas: TT, rectificado, nitrurado',
+    inputs: 'MO de posición con servicio subcontratado en BOM (P-MAT-4) · maestro subcontratistas (MF Compras v3.0) · ubicación lógica subcontractor (MF Inventario/WMS v3.0) · cuenta analítica del molde (MF Contabilidad v5.0)',
+    outputs: 'Material procesado reingresado a taller → P-MAT-4 · costo del servicio imputado a MO + cuenta analítica → MF Contabilidad v5.0 · picking de envío/retorno → MF Inventario/WMS v3.0',
+    lanes: ['mat','plan','com','inv','sub','cont'],
+    intro: 'Una posición en su ruta requiere una operación que no se ejecuta en planta, típicamente tratamiento térmico de aceros. Cita de Ignacio: "hay operaciones que no hacemos acá dentro, por ejemplo, el tratamiento térmico de los aceros". El material sale físicamente al proveedor, recibe el tratamiento, vuelve a planta, y el costo del servicio se imputa a la OF de la posición y a la cuenta analítica del molde.',
+    archNote: 'INPUTS — MO de posición con servicio subcontratado en BOM · maestro subcontratistas (MF Compras v3.0) · subcontractor location (MF Inventario/WMS v3.0) · cuenta analítica (MF Contabilidad v5.0). OUTPUTS — material procesado reingresado → P-MAT-4 · costo imputado a MO + cuenta analítica · pickings envío/retorno → MF Inventario/WMS v3.0. MÓDULOS — <strong>mrp_subcontracting</strong> nativo + <strong>subcontracted_service</strong> (OCA) + <strong>purchase_request</strong> (OCA) + <strong>mrp_account_analytic</strong> (OCA). ARQUITECTURA — Operación subcontratada modelada como <strong>producto tipo Servicio</strong> en BOM de posición (Opción A del RQ-MAT-32).',
+    steps: [
+      { n: '01', label: 'Operación externa', lane: 'mat', variant: 'mat',
+        title: 'Identificación de operación externa',
+        desc: 'En la ruta de fabricación de una posición (ej: <em>P321-08</em>), existe una operación que no se ejecuta en planta. Fernando Abal lo define al armar la hoja de ruta en DonPC y al configurar la BOM.',
+        tags: ['RQ-MAT-32', 'ruta posición', 'tratamiento térmico'],
+        cite: '"Hay operaciones que no hacemos acá dentro. Por ejemplo, el tratamiento térmico de los aceros" — Ignacio'
+      },
+      { n: '02', label: 'Servicio en BOM', lane: 'mat', variant: 'mat2',
+        title: 'Servicio configurado en la BOM',
+        desc: 'El servicio <em>"Tratamiento térmico SAE 4140"</em> es un producto tipo <em>Service</em>, UoM en kg, con proveedor habitual. Forma parte de la BOM de la posición.',
+        tags: ['RQ-MAT-34', 'product.type=service', 'UoM: kg', 'subcontracted_service (OCA)']
+      },
+      { n: '03', label: 'Confirmación MO', lane: 'mat', variant: 'mat3',
+        title: 'MO de la posición confirmada',
+        desc: 'Fernando confirma la Manufacturing Order de la posición. La MO tiene como componente el servicio subcontratado (además de los materiales).',
+        tags: ['mrp.production', 'BOM multinivel']
+      },
+      { n: '03b', label: '', lane: 'plan', variant: 'plan',
+        title: 'Necesidad de servicio generada',
+        desc: 'Al confirmar la MO, el scheduler MRP detecta la necesidad del servicio subcontratado y genera un procurement que dispara el circuito de compras.',
+        tags: ['RQ-MAT-39', 'mrp_multi_level (OCA)', 'procurement'],
+        cite: '"Desde el momento uno" — Fernando, sobre el vínculo MO ↔ subcontratación',
+        groupWith: '03'
+      },
+      { n: '04', label: 'Purchase Request', lane: 'com', variant: 'com',
+        title: 'PR del servicio generada',
+        desc: 'El sistema genera una <em>Purchase Request</em> para el servicio. La PR conserva el <em>origin</em> de la MO de la posición y la cuenta analítica del molde.',
+        tags: ['RQ-MAT-36', 'purchase_request (OCA)', 'trazabilidad']
+      },
+      { n: '05', label: 'PO al proveedor', lane: 'com', variant: 'com2',
+        title: 'Conversión a PO',
+        desc: 'Compras convierte la PR en Purchase Order al proveedor subcontratista. La PO incluye la cantidad en kg, la referencia a la posición, y el link al molde padre.',
+        tags: ['RQ-MAT-37', 'PO subcontratada']
+      },
+      { divider: 'SALIDA Y VUELTA FÍSICA — pieza viaja al proveedor y regresa', type: 'phys' },
+      { n: '06', label: 'Envío material', lane: 'inv', variant: 'inv',
+        title: 'Salida física al proveedor',
+        desc: 'Inventario genera un movimiento de salida (delivery) con destino proveedor. El material sale del stock de Matricería hacia la ubicación del subcontratista.',
+        tags: ['RQ-MAT-33', 'stock.picking (subcontracting)', 'salida física']
+      },
+      { n: '07', label: 'Ejecución tratamiento', lane: 'sub', variant: 'sub',
+        title: 'Operación en proveedor',
+        desc: 'El proveedor externo ejecuta el tratamiento térmico (temple, nitrurado, etc.). La pieza queda en su poder hasta finalizar.',
+        tags: ['operación externa', 'plazo proveedor'],
+        cite: 'Plazo típico: 3-7 días hábiles para TT'
+      },
+      { n: '08', label: 'Recepción post-servicio', lane: 'inv', variant: 'inv',
+        title: 'Regreso del material tratado',
+        desc: 'Inventario recepciona el material de vuelta en Matricería. El sistema cierra el picking de subcontratación y valida el servicio consumido.',
+        tags: ['RQ-MAT-38', 'recepción física', 'stock.picking return']
+      },
+      { divider: 'IMPUTACIÓN CONTABLE — costo del servicio capturado en la MO', type: 'end' },
+      { n: '09', label: 'Imputación costo', lane: 'cont', variant: 'cont',
+        title: 'Registro del costo en la MO',
+        desc: 'El costo del servicio (valor de la PO) se imputa automáticamente a la MO de la posición y, por agregación, a la cuenta analítica del molde. <em>mrp_account_analytic</em> (OCA) garantiza el vínculo.',
+        tags: ['RQ-MAT-35', 'RQ-MAT-40', 'mrp_account_analytic (OCA)']
+      },
+      { n: '10', label: 'Continuidad del flujo', lane: 'mat', variant: 'mat2',
+        title: 'Posición avanza hacia ensamble',
+        desc: 'Con el tratamiento térmico finalizado, la posición puede continuar su ruta interna de fabricación o pasar directamente al ensamble del molde (handoff a P-MAT-4).',
+        tags: ['handoff a P-MAT-4', 'ruta completa']
+      }
+    ],
+    arrows: [
+      { from: 2, to: 3, lane: 'com', label: 'procurement servicio' },
+      { from: 4, to: 5, lane: 'inv', label: 'envío' },
+      { from: 6, to: 7, lane: 'sub', label: 'ejecución' },
+      { from: 7, to: 8, lane: 'inv', label: 'regreso' },
+      { from: 8, to: 9, lane: 'cont', label: 'costo imputado' }
+    ]
+  },
+
+  p4: {
+    code: 'P-MAT-4',
+    name: 'Fabricación y Ensamble del Molde',
+    shortName: 'Fabricación y Ensamble',
+    type: 'Principal',
+    rqRange: 'RQ-MAT-41 a 45',
+    rqCount: 5,
+    description: 'Con los materiales disponibles (salida de P-MAT-2) y los servicios externos finalizados (P-MAT-3), Matricería ejecuta la fabricación de las posiciones y el ensamble final del molde. Se confirman MOs, se consumen materiales, se acumula costo en la cuenta analítica, y el molde terminado se entrega a Producción.',
+    shortDesc: 'Fabricación de posiciones + ensamble + entrega a Producción',
+    inputs: 'Materiales recepcionados (salida P-MAT-2) · servicios subcontratados completados (salida P-MAT-3) · BOMs multinivel (salida P-MAT-1) · rutas DonPC (Fase 1)',
+    outputs: 'Posiciones terminadas → ensamble · molde físico terminado → MF Producción/Calidad v4.0 (P-PRO-2) · costo acumulado en cuenta analítica → MF Contabilidad v5.0',
+    lanes: ['mat','prod'],
+    intro: 'Proceso de ejecución física en taller de Matricería. Con los materiales en stock y las MOs habilitadas, se fabrican las posiciones una por una, se ensamblan en el molde padre, y finalmente se entrega el molde completo a Producción para su uso en inyección. El costo total acumulado del molde (materiales + mano de obra + servicios externos) queda capturado en su cuenta analítica.',
+    archNote: 'INPUTS — materiales recepcionados (P-MAT-2) · servicios completados (P-MAT-3) · BOMs y rutas DonPC (P-MAT-1). OUTPUTS — posiciones terminadas → ensamble · molde físico → Producción (P-PRO-2) · costo acumulado → Contabilidad (P-MAT-6). MÓDULOS — <strong>mrp</strong> nativo Enterprise + <strong>mrp_account_analytic</strong> (OCA). CONFIGURACIÓN — MOs confirmadas dinámicamente según disponibilidad de materiales. Sin workflow de aprobación en Fase 1.',
+    steps: [
+      { n: '01', label: 'Materiales disponibles', lane: 'mat', variant: 'mat',
+        title: 'Confirmación de disponibilidad',
+        desc: 'Los materiales de una posición <em>P321-01</em> están en stock de Matricería (llegaron vía P-MAT-2). Fernando puede confirmar la MO de esa posición.',
+        tags: ['RQ-MAT-41', 'stock disponible', 'handoff desde P-MAT-2']
+      },
+      { n: '02', label: 'Confirmación MO', lane: 'mat', variant: 'mat',
+        title: 'MO de la posición confirmada',
+        desc: 'Fernando confirma la <em>mrp.production</em> de la posición. El sistema reserva los materiales del stock y la MO pasa a estado <em>Ready</em>.',
+        tags: ['mrp.production', 'estado Ready']
+      },
+      { n: '03', label: 'Ejecución en taller', lane: 'mat', variant: 'mat2',
+        title: 'Fabricación de la posición',
+        desc: 'Matricería ejecuta la ruta de fabricación (torno, fresa, electroerosión) siguiendo la hoja de ruta en DonPC. Si aplica tratamiento térmico, se ejecuta P-MAT-3 intercalado.',
+        tags: ['RQ-MAT-42', 'taller físico', 'DonPC']
+      },
+      { n: '04', label: 'Registro de producción', lane: 'mat', variant: 'mat3',
+        title: 'Confirmación de cantidad producida',
+        desc: 'Al finalizar la fabricación de la posición, Fernando registra la cantidad producida en la MO. El sistema consume los materiales del stock y registra la posición terminada.',
+        tags: ['producción confirmada', 'consumo materiales']
+      },
+      { divider: 'REPETICIÓN PARA TODAS LAS POSICIONES — ciclo iterativo hasta 100%' },
+      { n: '05', label: 'Iteración posiciones', lane: 'mat', variant: 'mat2',
+        title: 'Ciclo sobre las N posiciones',
+        desc: 'El flujo de MO individual (pasos 01-04) se repite para las 50-300 posiciones del molde. Algunas se ejecutan en paralelo, otras en serie según disponibilidad de materiales y capacidad de taller.',
+        tags: ['iteración', 'N posiciones']
+      },
+      { n: '06', label: '100% terminado', lane: 'mat', variant: 'mat',
+        title: 'Todas las posiciones completadas',
+        desc: 'Cuando todas las posiciones están fabricadas (100% de las MOs cerradas), se habilita la MO del molde padre para el ensamble final.',
+        tags: ['RQ-MAT-44', 'posiciones 100%']
+      },
+      { divider: 'ENSAMBLE FINAL — el molde padre se arma en banco' },
+      { n: '07', label: 'MO del molde', lane: 'mat', variant: 'mat',
+        title: 'Confirmación de MO del ensamble',
+        desc: 'Con el 100% de las posiciones terminadas, se confirma la MO del molde padre (P321). La BOM del molde lista como componentes todas las posiciones + materiales estándar (tornillería, conexiones).',
+        tags: ['RQ-MAT-44', 'RQ-MAT-45', 'MO del molde'],
+        cite: '"Una vez que esté completado todos los procesos... se genera el ensamble" — Fernando'
+      },
+      { n: '08', label: 'Consumo posiciones', lane: 'mat', variant: 'mat2',
+        title: 'Consumo de semi-elaborados',
+        desc: 'La MO del ensamble consume del stock todas las posiciones (P321-01 a P321-NN). El costo del molde = suma de costos de posiciones + materiales estándar.',
+        tags: ['consumo multinivel', 'agregación de costo']
+      },
+      { n: '09', label: 'Ensamble físico', lane: 'mat', variant: 'mat2',
+        title: 'Armado en banco',
+        desc: 'El ensamble se ejecuta en banco siguiendo el plano de fabricación. Analogía de Fernando: <em>"como armar el auto, pero llega todo el molde desarmado, como un mecano"</em>.',
+        tags: ['ensamble físico', 'plano de fabricación'],
+        cite: '"Como si fuese un auto y las posiciones son las partes cuando hacés la explosión del despiece" — Ignacio'
+      },
+      { n: '10', label: 'Molde completado', lane: 'mat', variant: 'mat',
+        title: 'MO del molde finalizada',
+        desc: 'Se cierra la MO del molde. El producto <em>P321</em> entra al stock de productos terminados de Matricería, con el costo total acumulado en su cuenta analítica.',
+        tags: ['molde terminado', 'costo final acumulado']
+      },
+      { divider: 'ENTREGA — el molde se transfiere al área de Producción para uso en inyección', type: 'end' },
+      { n: '11', label: 'Entrega producción', lane: 'prod', variant: 'prod',
+        title: 'Handoff a Producción',
+        desc: 'El molde físico se traslada al área de Producción (inyección). Natalia recibe el molde y lo pone en operación. Punto de inicio de su ciclo productivo y, eventualmente, de reprocesos (P-MAT-5).',
+        tags: ['entrega a Producción', 'inicio uso productivo', 'eventual P-MAT-5']
+      }
+    ],
+    arrows: [
+      { from: 0, to: 1, lane: 'mat', label: 'materiales disponibles' },
+      { from: 3, to: 4, lane: 'sub', label: 'si subcontrata' },
+      { from: 4, to: 5, lane: 'mat', label: 'reingresa' },
+      { from: 5, to: 6, lane: 'mat', label: 'posiciones 100%' },
+      { from: 9, to: 10, lane: 'prod', label: 'handoff producción' }
+    ]
+  },
+
+  p5: {
+    code: 'P-MAT-5',
+    name: 'Gestión de Reprocesos de Moldes',
+    shortName: 'Reprocesos',
+    type: 'Principal (bucle)',
+    rqRange: 'RQ-MAT-46 a 49',
+    rqCount: 4,
+    description: 'Un molde en uso productivo retorna a Matricería para reparación o modificación. Reutiliza el código del molde existente con una BOM de intervención focalizada. Representa la mayoría del trabajo del sector.',
+    shortDesc: 'Molde vuelve de planta para reparación o modificación',
+    inputs: 'Solicitud de reproceso desde Producción (MF Producción/Calidad v4.0 P-PRO-2) · molde bloqueado en Maestro de Moldes (mrp_tool_tracking) · diagnóstico del defecto · BOM original y posiciones afectadas',
+    outputs: 'Molde reparado/modificado → reentrega a Producción · bloqueo/liberación en Maestro de Moldes → MF Planificación v4.0 · costo de intervención → cuenta analítica → MF Contabilidad v5.0',
+    lanes: ['prod','mat','plan','com','inv'],
+    intro: 'Disparador: un molde ya en uso productivo es devuelto desde Producción a Matricería. Cita de Ignacio: "se manejan totalmente distintos" respecto de moldes nuevos. Representa la mayoría del trabajo del sector (frente a 10-12 moldes nuevos/año). Un reproceso reutiliza el código del molde existente con una BOM de intervención (solo las posiciones/materiales que requieren la reparación).',
+    archNote: 'INPUTS — solicitud de reproceso desde Producción (P-PRO-2) · molde bloqueado en mrp_tool_tracking · diagnóstico del defecto · BOM original del molde. OUTPUTS — molde reparado → Producción · liberación en Maestro de Moldes → Planificación · costo de intervención → cuenta analítica. MÓDULOS — <strong>mrp_tag</strong> (OCA) tags de MO · <strong>mrp_repair_order</strong> (OCA) órdenes de reparación. ARQUITECTURA — BOM del reproceso como <strong>BOM variante</strong> o <em>ad-hoc</em>. Flujo reutiliza P-MAT-2 (materiales), P-MAT-3 (subcontratación), P-MAT-4 (fabricación/ensamble).',
+    steps: [
+      { n: '01', label: 'Devolución molde', lane: 'prod', variant: 'prod', laneRow: 'prod',
+        title: 'Molde vuelve de planta',
+        desc: 'El molde <em>P321</em>, ya en uso productivo, presenta falla, desgaste o requiere modificación. Natalia (Producción) devuelve el molde a Matricería con aviso formal.',
+        tags: ['RQ-MAT-49', 'disparador', 'falla / desgaste / modif.'],
+        cite: '"Se manejan totalmente distintos" — Ignacio, sobre moldes nuevos vs reprocesos'
+      },
+      { n: '02', label: 'Identificación', lane: 'mat', variant: 'mat',
+        title: 'Localización del molde existente',
+        desc: 'Matricería busca el producto molde por código <em>P321</em> en Odoo. Accede a la BOM original, al historial de reprocesos anteriores (chatter) y a la ficha técnica.',
+        tags: ['RQ-MAT-49', 'producto existente', 'historial chatter']
+      },
+      { n: '03', label: 'Diagnóstico', lane: 'mat', variant: 'mat2',
+        title: 'Evaluación del alcance',
+        desc: 'Ignacio y Fernando evalúan qué posiciones o materiales requieren intervención. Documentan el diagnóstico y el alcance del reproceso. Pueden consultar a Producción para precisar el problema.',
+        tags: ['diagnóstico técnico', 'alcance']
+      },
+      { divider: 'DIFERENCIACIÓN DE CIRCUITO — tag distintivo vs. molde nuevo' },
+      { n: '04', label: 'Tag reproceso', lane: 'mat', variant: 'mat3',
+        title: 'Clasificación: Nuevo vs. Reproceso',
+        desc: 'Se crea la MO con tag <em>Reproceso</em> (<em>mrp_tag</em> OCA) para diferenciarla en reportes y dashboards. Opcionalmente, <em>mrp_repair_order</em> (OCA) formaliza el flujo como orden de reparación.',
+        tags: ['RQ-MAT-46', 'mrp_tag (OCA)', 'mrp_repair_order (OCA)']
+      },
+      { n: '05', label: 'BOM intervención', lane: 'mat', variant: 'mat',
+        title: 'BOM focalizada del reproceso',
+        desc: 'Se arma una BOM variante o ad-hoc que contiene SOLO los materiales/posiciones a reparar. A diferencia de moldes nuevos, no se re-fabrica todo: solo la intervención.',
+        tags: ['BOM variante', 'focalizada'],
+        cite: '"No se fabrica todo, solo lo que hace falta reparar" — interpretación del relevamiento'
+      },
+      { divider: 'ACTIVACIÓN CONDICIONAL DE OTROS PROCESOS', type: 'loop' },
+      { n: '06', label: 'Materiales nuevos', lane: 'plan', variant: 'plan2',
+        title: '(Si aplica) MRP + compras de repuestos',
+        desc: 'Si la intervención requiere materiales nuevos (repuestos de estándares, material bruto para piezas a re-fabricar), se activa un mini-ciclo de P-MAT-2 focalizado a los materiales necesarios.',
+        tags: ['handoff a P-MAT-2', 'materiales focalizados'],
+        cite: 'Plazo típicamente menor que molde nuevo'
+      },
+      { n: '07', label: 'Intervención física', lane: 'mat', variant: 'mat2',
+        title: 'Ejecución del reproceso',
+        desc: 'Matricería ejecuta la intervención: reparación de superficies, reemplazo de posiciones dañadas, ajustes dimensionales, modificaciones. Ruta detallada sigue en DonPC.',
+        tags: ['mini P-MAT-4', 'intervención ruta DonPC'],
+      },
+      { n: '07b', label: '', lane: 'inv', variant: 'inv2',
+        title: 'Consumo de repuestos',
+        desc: 'Inventario entrega los repuestos o materiales al taller. Los consumos se registran en la MO del reproceso y se imputan a la cuenta analítica del molde.',
+        tags: ['consumo focalizado', 'traza analítica'],
+        groupWith: '07'
+      },
+      { divider: 'CIERRE — molde reparado vuelve a Producción', type: 'end' },
+      { n: '08', label: 'Reentrega producción', lane: 'prod', variant: 'prod', laneRow: 'prod',
+        title: 'Molde reparado devuelto',
+        desc: 'El molde <em>P321</em> se devuelve a Producción, ya reparado/modificado. Natalia lo reactiva en la línea de inyección. El costo del reproceso queda imputado a la cta. analítica del molde.',
+        tags: ['RQ-MAT-47', 'RQ-MAT-48', 'costo reproceso capturado']
+      }
+    ],
+    arrows: [
+      { from: 0, to: 1, lane: 'mat', label: 'devolución' },
+      { from: 4, to: 5, lane: 'plan', label: 'si materiales' },
+      { from: 5, to: 6, lane: 'mat', label: 'repuestos' },
+      { from: 7, to: 8, lane: 'prod', label: 'reentregado' }
+    ]
+  }
+};
+
+// Feature state
+const FEATURES = {
+  analytics: false,
+  presentation: false,
+  context: false,
+  minimap: false,
+  filters: false
+};
+
+// Filter state
+const FILTERS = {
+  dev: false,
+  oca: false,
+  critical: false,
+  'lane-mat': false,
+  'lane-plan': false,
+  'lane-com': false
+};
+
+let currentZoom = 1;
+let currentProcess = null;
+let presentationIndex = 0;
+const presentationOrder = ['p1', 'p2', 'p3', 'p4', 'p5'];
+
+/* ================================================================= */
+/* FEATURE TOGGLES                                                   */
+/* ================================================================= */
+
+function toggleFeatureBar() {
+  const bar = document.getElementById('featuresBar');
+  const btn = document.getElementById('collapseBtn');
+  if(bar.classList.contains('collapsed')){
+    bar.classList.remove('collapsed');
+    btn.textContent = '▼';
+  } else {
+    bar.classList.add('collapsed');
+    btn.textContent = '▲';
+  }
+}
+
+function toggleFeature(feature) {
+  FEATURES[feature] = !FEATURES[feature];
+  const toggle = document.getElementById(`toggle-${feature}`);
+  if(FEATURES[feature]){
+    toggle.classList.add('active');
+  } else {
+    toggle.classList.remove('active');
+  }
+
+  // Apply feature
+  if(feature === 'analytics'){
+    const panel = document.getElementById('analyticsPanel');
+    if(FEATURES.analytics){
+      panel.classList.add('active');
+      updateAnalytics();
+    } else {
+      panel.classList.remove('active');
+    }
+  }
+  else if(feature === 'presentation'){
+    if(FEATURES.presentation){
+      enterPresentationMode();
+    } else {
+      exitPresentationMode();
+    }
+  }
+  else if(feature === 'context'){
+    const panel = document.getElementById('contextPanel');
+    if(FEATURES.context){
+      panel.classList.add('active');
+      setupContextHovers();
+    } else {
+      panel.classList.remove('active');
+    }
+  }
+  else if(feature === 'minimap'){
+    const panel = document.getElementById('minimapPanel');
+    if(FEATURES.minimap){
+      panel.classList.add('active');
+      updateMinimap();
+    } else {
+      panel.classList.remove('active');
+    }
+  }
+  else if(feature === 'filters'){
+    const panel = document.getElementById('filtersPanel');
+    if(FEATURES.filters){
+      panel.classList.add('active');
+    } else {
+      panel.classList.remove('active');
+      // Reset filters
+      Object.keys(FILTERS).forEach(k => FILTERS[k] = false);
+      document.querySelectorAll('.filter-option').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('filtered-out', 'highlighted'));
+    }
+  }
+}
+
+function toggleFilter(filterId) {
+  FILTERS[filterId] = !FILTERS[filterId];
+  const el = document.getElementById(`filter-${filterId}`);
+  if(FILTERS[filterId]){
+    el.classList.add('active');
+  } else {
+    el.classList.remove('active');
+  }
+  applyFilters();
+}
+
+function applyFilters() {
+  const cards = document.querySelectorAll('.card');
+  
+  // Reset all
+  cards.forEach(c => {
+    c.classList.remove('filtered-out', 'highlighted');
+  });
+
+  // No active filters → show all
+  const anyActive = Object.values(FILTERS).some(v => v);
+  if(!anyActive) return;
+
+  cards.forEach((card, idx) => {
+    const step = currentProcess ? currentProcess.steps.filter(s => !s.divider)[idx] : null;
+    if(!step) return;
+
+    let show = true;
+
+    // Dev filter
+    if(FILTERS.dev){
+      const hasDev = step.tags && step.tags.some(t => t.includes('DEV'));
+      if(!hasDev) show = false;
+    }
+
+    // OCA filter
+    if(FILTERS.oca){
+      const hasOca = step.tags && step.tags.some(t => t.toLowerCase().includes('oca'));
+      if(!hasOca) show = false;
+    }
+
+    // Critical filter (steps with connections)
+    if(FILTERS.critical){
+      const isCritical = currentProcess && currentProcess.arrows && 
+        currentProcess.arrows.some(a => a.from === idx || a.to === idx);
+      if(!isCritical) show = false;
+    }
+
+    // Lane filters
+    if(FILTERS['lane-mat'] && step.lane !== 'mat') show = false;
+    if(FILTERS['lane-plan'] && step.lane !== 'plan') show = false;
+    if(FILTERS['lane-com'] && step.lane !== 'com') show = false;
+
+    if(!show){
+      card.classList.add('filtered-out');
+    } else {
+      card.classList.add('highlighted');
+    }
+  });
+}
+
+/* ================================================================= */
+/* ANALYTICS (#3)                                                    */
+/* ================================================================= */
+
+function updateAnalytics() {
+  if(!currentProcess) return;
+
+  const proc = currentProcess;
+  
+  // Process info
+  document.getElementById('currentProcessCode').textContent = proc.code;
+  document.getElementById('currentProcessName').textContent = proc.name;
+
+  // Total steps
+  const contentSteps = proc.steps.filter(s => !s.divider);
+  document.getElementById('totalSteps').textContent = contentSteps.length;
+
+  // Steps by lane
+  const byLane = {};
+  contentSteps.forEach(s => {
+    byLane[s.lane] = (byLane[s.lane] || 0) + 1;
+  });
+  const laneStr = Object.entries(byLane).map(([k,v]) => `${LANES[k].name}: ${v}`).join(', ');
+  document.getElementById('stepsByLane').textContent = laneStr;
+
+  // Bottlenecks (steps with most arrows)
+  const bottlenecks = findBottlenecks(proc);
+  const list = document.getElementById('bottleneckList');
+  list.innerHTML = '';
+  bottlenecks.forEach(b => {
+    const div = document.createElement('div');
+    div.className = 'bottleneck-item';
+    div.innerHTML = `
+      <div class="bottleneck-step">${b.step.title}</div>
+      <div class="bottleneck-reason">${b.count} conexiones entrantes/salientes</div>
+    `;
+    list.appendChild(div);
+  });
+
+  // Heatmap
+  updateHeatmap();
+}
+
+function findBottlenecks(proc) {
+  const contentSteps = proc.steps.filter(s => !s.divider);
+  const connections = contentSteps.map((s, idx) => {
+    const count = (proc.arrows || []).filter(a => a.from === idx || a.to === idx).length;
+    return { step: s, count, idx };
+  });
+  return connections.filter(c => c.count >= 2).sort((a,b) => b.count - a.count).slice(0, 3);
+}
+
+function updateHeatmap() {
+  const grid = document.getElementById('heatmapGrid');
+  grid.innerHTML = '';
+  
+  // Simulated usage frequency (P-MAT-5 is loop = most frequent)
+  const heatMap = {
+    p1: 1, // new molds = low freq
+    p2: 2,
+    p3: 2,
+    p4: 4,
+    p5: 5  // reprocessing = very high freq
+  };
+
+  Object.keys(PROCESSES).forEach(pid => {
+    const proc = PROCESSES[pid];
+    const heat = heatMap[pid] || 1;
+    const cell = document.createElement('div');
+    cell.className = `heatmap-cell heat-${heat}`;
+    cell.textContent = proc.code.split('-')[1];
+    cell.title = `${proc.code}: Frecuencia ${heat}/5`;
+    cell.onclick = () => {
+      window.location.hash = `#/${pid}`;
+    };
+    grid.appendChild(cell);
+  });
+}
+
+/* ================================================================= */
+/* PRESENTATION MODE (#4)                                            */
+/* ================================================================= */
+
+function enterPresentationMode() {
+  document.body.classList.add('presentation-mode');
+  presentationIndex = presentationOrder.indexOf(window.location.hash.replace(/^#\//, ''));
+  if(presentationIndex < 0) presentationIndex = 0;
+  updatePresentationInfo();
+  
+  // Keyboard navigation
+  document.addEventListener('keydown', presentationKeyHandler);
+}
+
+function exitPresentationMode() {
+  document.body.classList.remove('presentation-mode');
+  document.removeEventListener('keydown', presentationKeyHandler);
+  FEATURES.presentation = false;
+  document.getElementById('toggle-presentation').classList.remove('active');
+}
+
+function presentationKeyHandler(e) {
+  if(!FEATURES.presentation) return;
+  if(e.key === 'ArrowRight') presentationNav('next');
+  else if(e.key === 'ArrowLeft') presentationNav('prev');
+  else if(e.key === 'Escape') presentationNav('exit');
+}
+
+function presentationNav(dir) {
+  if(dir === 'exit'){
+    exitPresentationMode();
+    return;
+  }
+  
+  if(dir === 'next'){
+    presentationIndex++;
+    if(presentationIndex >= presentationOrder.length) presentationIndex = 0;
+  } else if(dir === 'prev'){
+    presentationIndex--;
+    if(presentationIndex < 0) presentationIndex = presentationOrder.length - 1;
+  }
+  
+  window.location.hash = `#/${presentationOrder[presentationIndex]}`;
+  updatePresentationInfo();
+}
+
+function updatePresentationInfo() {
+  const info = document.getElementById('presInfo');
+  info.textContent = `Proceso ${presentationIndex + 1} / ${presentationOrder.length}`;
+}
+
+/* ================================================================= */
+/* CONTEXT PANEL (#5)                                                */
+/* ================================================================= */
+
+function setupContextHovers() {
+  const cards = document.querySelectorAll('.card');
+  cards.forEach((card, idx) => {
+    card.addEventListener('mouseenter', () => showContext(idx));
+    card.addEventListener('mouseleave', hideContext);
+  });
+}
+
+function showContext(stepIdx) {
+  if(!FEATURES.context || !currentProcess) return;
+  
+  const contentSteps = currentProcess.steps.filter(s => !s.divider);
+  const step = contentSteps[stepIdx];
+  if(!step) return;
+
+  const panel = document.getElementById('contextPanel');
+  document.getElementById('contextTitle').innerHTML = step.title;
+  document.getElementById('contextDesc').innerHTML = step.desc;
+  
+  // Tags
+  const tagsHtml = (step.tags || []).map(t => `<span class="context-tag">${t}</span>`).join(' ');
+  document.getElementById('contextTags').innerHTML = tagsHtml || 'Sin tags';
+  
+  // Cite
+  if(step.cite){
+    document.getElementById('contextCiteSection').style.display = 'block';
+    document.getElementById('contextCite').textContent = step.cite;
+  } else {
+    document.getElementById('contextCiteSection').style.display = 'none';
+  }
+  
+  // MF link (placeholder - would link to Google Drive doc)
+  const link = document.getElementById('contextMfLink');
+  link.href = '#'; // In production: link to specific section in Google Drive MF
+  link.textContent = `Ver ${currentProcess.code} en MF →`;
+  
+  panel.style.display = 'block';
+}
+
+function hideContext() {
+  const panel = document.getElementById('contextPanel');
+  panel.style.display = 'none';
+}
+
+/* ================================================================= */
+/* MINIMAP & ZOOM (#6)                                               */
+/* ================================================================= */
+
+function updateMinimap() {
+  if(!currentProcess) return;
+  
+  const canvas = document.getElementById('minimapCanvas');
+  canvas.innerHTML = '';
+  
+  const contentSteps = currentProcess.steps.filter(s => !s.divider);
+  const width = canvas.offsetWidth;
+  const height = canvas.offsetHeight;
+  
+  contentSteps.forEach((s, idx) => {
+    const dot = document.createElement('div');
+    dot.className = `minimap-step ${s.variant || s.lane}`;
+    dot.style.background = `var(--${s.lane})`;
+    
+    // Position in a grid
+    const cols = 5;
+    const col = idx % cols;
+    const row = Math.floor(idx / cols);
+    dot.style.left = `${(col / cols) * width}px`;
+    dot.style.top = `${(row / Math.ceil(contentSteps.length / cols)) * height}px`;
+    
+    dot.onclick = () => {
+      // Scroll to step
+      const cards = document.querySelectorAll('.card');
+      if(cards[idx]){
+        cards[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        cards[idx].classList.add('highlighted');
+        setTimeout(() => cards[idx].classList.remove('highlighted'), 2000);
+      }
+    };
+    
+    canvas.appendChild(dot);
+  });
+}
+
+function zoom(dir) {
+  if(dir === 'in') currentZoom = Math.min(currentZoom + 0.2, 2);
+  else if(dir === 'out') currentZoom = Math.max(currentZoom - 0.2, 0.6);
+  else if(dir === 'reset') currentZoom = 1;
+  
+  const wrapper = document.querySelector('.diagram-wrapper');
+  if(wrapper){
+    wrapper.style.transform = `scale(${currentZoom})`;
+  }
+}
+
+/* ================================================================= */
+/* ORIGINAL RENDERING LOGIC (preserved)                              */
+/* ================================================================= */
+
+function el(tag, attrs, text) {
+  const e = document.createElement(tag);
+  if (attrs) Object.entries(attrs).forEach(([k, v]) => {
+    if (k === 'class') e.className = v;
+    else if (k === 'html') e.innerHTML = v;
+    else e.setAttribute(k, v);
+  });
+  if (text) e.textContent = text;
+  return e;
+}
+
+function renderRouteBar(page) {
+  const bar = el('div', { class: 'routebar' });
+  
+  const left = el('div', { class: 'routebar-left' });
+  left.innerHTML = '<span class="crumb-sep">⬡</span> <span>CADENA DE VALOR</span> <span class="crumb-sep">/</span>';
+  
+  if (page === 'overview') {
+    left.innerHTML += ' <span class="crumb-active">Overview</span>';
+  } else {
+    const link = el('a', { href: '#/overview' }, 'Overview');
+    left.appendChild(link);
+    left.appendChild(document.createTextNode(' '));
+    left.appendChild(el('span', { class: 'crumb-sep' }, '/'));
+    left.appendChild(document.createTextNode(' '));
+    const proc = PROCESSES[page];
+    left.appendChild(el('span', { class: 'crumb-active' }, proc.code));
+  }
+  
+  bar.appendChild(left);
+  
+  const right = el('div', { class: 'routebar-right' });
+  if (page !== 'overview') {
+    const backLink = el('a', { href: '#/overview' }, '← Volver a overview');
+    right.appendChild(backLink);
+  } else {
+    right.textContent = 'Navegá los procesos ↓';
+  }
+  bar.appendChild(right);
+  
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  app.appendChild(bar);
+}
+
+function renderOverview() {
+  currentProcess = null;
+  const app = document.getElementById('app');
+  
+  const header = el('header', { class: 'page' });
+  header.appendChild(el('div', { class: 'badge' }, 'Odoo 17 Enterprise · Matricería · Argul y Compañía S.A.'));
+  header.appendChild(el('span', { class: 'version-badge' }, 'v4.0 · 30 abril 2026 · 6 procesos'));
+  const h1 = el('h1');
+  h1.innerHTML = 'Cadena de Valor del área de <span>Matricería</span>';
+  header.appendChild(h1);
+  header.appendChild(el('p', {}, 'Plataforma de navegación v4.0 · 5 flujos de procesos · 1 proceso transversal (documentación) · 30 de abril de 2026'));
+  app.appendChild(header);
+
+  const legend = el('div', { class: 'legend' });
+  Object.entries(LANES).forEach(([key, lane]) => {
+    const item = el('div', { class: 'legend-item' });
+    item.appendChild(el('div', { class: 'legend-dot', style: `background:var(--${lane.color})` }));
+    item.appendChild(document.createTextNode(lane.name));
+    legend.appendChild(item);
+  });
+  app.appendChild(legend);
+
+  app.appendChild(el('div', {
+    class: 'intro-note',
+    html: '<strong>⬡ ORIENTACIÓN —</strong> Esta plataforma muestra los 6 procesos del área de Matricería estructurados como cadena de valor. Los 5 procesos <strong>principales y bucle</strong> tienen diagrama de flujo propio; el proceso transversal de <strong>Costeo Analítico</strong> no tiene diagrama (está documentado en el MF). Por decisión cross-área (30/04/2026), el <strong>gobierno del Maestro de Moldes</strong> (alta, baja, modificaciones) es responsabilidad del área de Matricería (Ignacio Argul / Fernando Abal). Hacé click en cualquier tarjeta para ver el flujo detallado de swimlanes de ese proceso.'
+  }));
+
+  const overviewWrap = el('div', { class: 'overview-wrap' });
+
+  overviewWrap.appendChild(el('div', { class: 'section-title' }, 'Macro-flujo · eslabonamiento de procesos'));
+
+  const macro = el('div', { class: 'macro-flow' });
+
+  function macroStep(pid) {
+    const p = PROCESSES[pid];
+    const step = el('a', { class: `macro-step ${pid}`, href: `#/${pid}` });
+    step.appendChild(el('div', { class: 'macro-code' }, p.code + ' · ' + p.type.toUpperCase()));
+    step.appendChild(el('div', { class: 'macro-name' }, p.shortName));
+    step.appendChild(el('div', { class: 'macro-hint' }, p.shortDesc));
+    return step;
+  }
+
+  function macroArrow() {
+    return el('div', { class: 'macro-arrow' }, '→');
+  }
+
+  macro.appendChild(macroStep('p1'));
+  macro.appendChild(macroArrow());
+  macro.appendChild(macroStep('p2'));
+  macro.appendChild(macroArrow());
+  macro.appendChild(macroStep('p3'));
+  macro.appendChild(macroArrow());
+  macro.appendChild(macroStep('p4'));
+  overviewWrap.appendChild(macro);
+
+  overviewWrap.appendChild(el('div', {
+    class: 'loop-hint',
+    html: '↻ <strong>BUCLE</strong> — El proceso <strong>P-MAT-5 (Reprocesos)</strong> es un ciclo que se activa desde <strong>Producción</strong> y reingresa en P-MAT-2 (si requiere materiales) y/o P-MAT-4 (fabricación/ensamble focalizado). Representa la mayoría del trabajo del sector.'
+  }));
+
+  overviewWrap.appendChild(el('div', { class: 'section-title' }, 'Procesos principales · hacé click para ver el flujo completo'));
+
+  const grid = el('div', { class: 'pgrid' });
+  ['p1', 'p2', 'p3', 'p4', 'p5'].forEach(pid => {
+    const p = PROCESSES[pid];
+    const card = el('a', { class: `pcard ${pid}`, href: `#/${pid}` });
+    
+    const head = el('div', { class: 'pcard-head' });
+    head.appendChild(el('div', { class: 'pcard-code' }, p.code));
+    head.appendChild(el('div', { class: 'pcard-type' }, p.type));
+    card.appendChild(head);
+    
+    card.appendChild(el('div', { class: 'pcard-title' }, p.name));
+    card.appendChild(el('div', { class: 'pcard-desc', html: p.description }));
+    
+    const meta = el('div', { class: 'pcard-meta' });
+    meta.appendChild(el('div', { class: 'meta-group', html: `<span class="meta-label">RQs:</span> <span class="meta-value">${p.rqRange}</span>` }));
+    meta.appendChild(el('div', { class: 'meta-group', html: `<span class="meta-label">Total:</span> <span class="meta-value">${p.rqCount}</span>` }));
+    card.appendChild(meta);
+    
+    const lanes = el('div', { class: 'pcard-lanes' });
+    p.lanes.forEach(lk => {
+      const chip = el('div', { class: `lane-chip ${lk}` }, LANES[lk].name);
+      lanes.appendChild(chip);
+    });
+    card.appendChild(lanes);
+    
+    card.appendChild(el('div', { class: 'pcard-cta' }, '→ Ver flujo completo'));
+    
+    grid.appendChild(card);
+  });
+  overviewWrap.appendChild(grid);
+
+  overviewWrap.appendChild(el('div', {
+    class: 'p6-note',
+    html: '<strong>⚙ P-MAT-6 — COSTEO ANALÍTICO (transversal)</strong> — Proceso de imputación y gestión de costos por molde mediante cuentas analíticas (<em>mrp_account_analytic</em> OCA). No tiene diagrama de flujo propio; está documentado en la sección §10 del MF de Matricería v4.0.'
+  }));
+
+  app.appendChild(overviewWrap);
+  
+  // Update heatmap if analytics is on
+  if(FEATURES.analytics) updateHeatmap();
+}
+
+function renderProcess(pid) {
+  const proc = PROCESSES[pid];
+  currentProcess = proc;
+  
+  const app = document.getElementById('app');
+
+  const header = el('header', { class: 'page' });
+  header.appendChild(el('div', { class: 'badge' }, proc.code + ' · ' + proc.type.toUpperCase()));
+  header.appendChild(el('span', { class: 'version-badge' }, proc.rqRange + ' · ' + proc.rqCount + ' requisitos'));
+  const h1 = el('h1');
+  h1.innerHTML = proc.name;
+  header.appendChild(h1);
+  header.appendChild(el('p', { html: proc.description }));
+  app.appendChild(header);
+
+  const legend = el('div', { class: 'legend' });
+  Object.entries(LANES).forEach(([key, lane]) => {
+    const item = el('div', { class: 'legend-item' });
+    item.appendChild(el('div', { class: 'legend-dot', style: `background:var(--${lane.color})` }));
+    item.appendChild(document.createTextNode(lane.name));
+    legend.appendChild(item);
+  });
+  app.appendChild(legend);
+
+  app.appendChild(el('div', { class: 'intro-note', html: '<strong>⬡ CONTEXTO —</strong> ' + proc.intro }));
+  if (proc.inputs || proc.outputs) {
+    const ioBox = el('div', { class: 'arch-note', style: 'border-color: var(--mat); margin-bottom: 12px;' });
+    let ioHtml = '';
+    if (proc.inputs) ioHtml += '<strong>⬡ INPUTS —</strong> ' + proc.inputs + '<br>';
+    if (proc.outputs) ioHtml += '<strong>⬡ OUTPUTS —</strong> ' + proc.outputs;
+    ioBox.innerHTML = ioHtml;
+    app.appendChild(ioBox);
+  }
+  if (proc.archNote) {
+    app.appendChild(el('div', { class: 'arch-note', html: '<strong>⬡ ARQUITECTURA —</strong> ' + proc.archNote }));
+  }
+
+  const diagramWrap = el('div', { class: 'diagram' });
+  const diagramRel = el('div', { class: 'diagram-rel diagram-wrapper' });
+  
+  const lanes = proc.lanes;
+  const sw = el('div', { class: 'sw' });
+  sw.style.gridTemplateColumns = `100px repeat(${lanes.length}, 1fr)`;
+
+  sw.appendChild(el('div', { class: 'hdr-corner' }, 'Proceso'));
+  lanes.forEach((laneKey, idx) => {
+    const lane = LANES[laneKey];
+    const isLast = (idx === lanes.length - 1);
+    const extraCls = isLast ? ' hdr-last' : '';
+    const hdr = el('div', { class: `hdr hdr-${lane.color}${extraCls}` });
+    hdr.appendChild(el('div', {}, lane.name));
+    sw.appendChild(hdr);
+  });
+
+  let rowIdx = 1;
+  const steps = proc.steps;
+  let i = 0;
+
+  while (i < steps.length) {
+    const step = steps[i];
+    
+    if (step.divider) {
+      const div = el('div', { class: 'divider-row' });
+      if (step.type) div.classList.add(step.type);
+      div.appendChild(document.createTextNode(step.divider));
+      sw.appendChild(div);
+      i++;
+      continue;
+    }
+
+    let j = i + 1;
+    while (j < steps.length && steps[j].groupWith === step.n) j++;
+    const groupSteps = steps.slice(i, j);
+
+    sw.appendChild(el('div', { class: 'sl' }, `<strong>${rowIdx}</strong>`));
+
+    lanes.forEach((laneKey, laneIdx) => {
+      const lane = LANES[laneKey];
+      const isLast = (laneIdx === lanes.length - 1);
+      const extraCls = isLast ? ' last-col' : '';
+      
+      let fullRow = step.laneRow && (laneKey === step.laneRow);
+      let lcClass = fullRow ? `lc ${step.laneRow}-row${extraCls}` : `lc ${lane.color}-bg${extraCls}`;
+      const lc = el('div', { class: lcClass });
+
+      groupSteps.forEach(s => {
+        if (s.lane !== laneKey) return;
+        const cardVariant = s.variant || s.lane;
+        const card = el('div', { class: `card ${cardVariant}` });
+        
+        if (s.label) card.appendChild(el('div', { class: 'card-title', html: s.label + ' · ' + s.title }));
+        else card.appendChild(el('div', { class: 'card-title', html: s.title }));
+        
+        card.appendChild(el('div', { class: 'card-desc', html: s.desc }));
+        
+        if (s.tags) {
+          const tagsDiv = el('div', { class: 'card-tags' });
+          s.tags.forEach(t => {
+            let tagClass = 'ctag gen';
+            if (t.startsWith('RQ')) tagClass = 'ctag rq';
+            else if (t.startsWith('DEV')) tagClass = 'ctag dev';
+            else if (t.includes('OCA')) tagClass = 'ctag oca';
+            else if (t.includes('nativo') || t.includes('Enterprise')) tagClass = 'ctag nat';
+            tagsDiv.appendChild(el('div', { class: tagClass, html: t }));
+          });
+          card.appendChild(tagsDiv);
+        }
+        
+        if (s.cite) {
+          card.appendChild(el('span', { class: 'cite', html: s.cite }));
+        }
+        if (s.pill) {
+          card.appendChild(el('div', { class: `auto-pill auto-${s.pill.color}`, html: s.pill.text }));
+        }
+        lc.appendChild(card);
+      });
+      sw.appendChild(lc);
+    });
+
+    const nextStepIdx = j;
+    const hasNextContent = nextStepIdx < steps.length;
+    const nextIsEndDivider = hasNextContent && steps[nextStepIdx].divider && steps[nextStepIdx].type === 'end';
+
+    if (hasNextContent && !nextIsEndDivider) {
+      let nextContentStep = null;
+      let k = nextStepIdx;
+      while (k < steps.length) {
+        if (!steps[k].divider) { nextContentStep = steps[k]; break; }
+        k++;
+      }
+      sw.appendChild(el('div', { class: 'ar-corner' }));
+      lanes.forEach((laneKey, idx) => {
+        const lane = LANES[laneKey];
+        const isLast = (idx === lanes.length - 1);
+        const extraCls = isLast ? ' last-col' : '';
+        const ar = el('div', { class: `ar ${lane.color}-bg${extraCls}` });
+        if (nextContentStep && nextContentStep.lane === laneKey) {
+          const varr = el('div', { class: `varr ${lane.color}` });
+          varr.appendChild(el('div', { class: 'sh' }));
+          varr.appendChild(el('div', { class: 'hd' }));
+          ar.appendChild(varr);
+        }
+        sw.appendChild(ar);
+      });
+    }
+
+    rowIdx++;
+    i = j;
+  }
+
+  diagramRel.appendChild(sw);
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'ov');
+  svg.setAttribute('id', 'ov');
+  diagramRel.appendChild(svg);
+  diagramWrap.appendChild(diagramRel);
+  app.appendChild(diagramWrap);
+
+  requestAnimationFrame(() => {
+    drawArrows(proc);
+    if(FEATURES.analytics) updateAnalytics();
+    if(FEATURES.context) setupContextHovers();
+    if(FEATURES.minimap) updateMinimap();
+    if(FEATURES.filters) applyFilters();
+  });
+}
+
+function drawArrows(proc) {
+  const svg = document.getElementById('ov');
+  if (!svg) return;
+  const wrap = svg.parentElement, wr = wrap.getBoundingClientRect();
+  svg.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+  const defs = document.createElementNS(ns, 'defs');
+
+  ['mat', 'plan', 'com', 'inv', 'sub', 'cont', 'prod'].forEach(c => {
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--' + c).trim() || '#ccc';
+    const mk = document.createElementNS(ns, 'marker');
+    mk.setAttribute('id', 'm' + c);
+    mk.setAttribute('markerWidth', '8');
+    mk.setAttribute('markerHeight', '8');
+    mk.setAttribute('refX', '7');
+    mk.setAttribute('refY', '3');
+    mk.setAttribute('orient', 'auto');
+    const pth = document.createElementNS(ns, 'path');
+    pth.setAttribute('d', 'M0,0 L0,6 L8,3 z');
+    pth.setAttribute('fill', hex);
+    mk.appendChild(pth);
+    defs.appendChild(mk);
+  });
+  svg.appendChild(defs);
+
+  if (!proc.arrows || !proc.arrows.length) return;
+
+  const cards = Array.from(document.querySelectorAll('.card'));
+  if (cards.length < 2) return;
+
+  function rc(el) {
+    const r = el.getBoundingClientRect();
+    return {
+      cx: r.left - wr.left + r.width / 2,
+      cy: r.top - wr.top + r.height / 2,
+      l: r.left - wr.left,
+      r: r.right - wr.left,
+      t: r.top - wr.top,
+      b: r.bottom - wr.top
+    };
+  }
+
+  function line(x1, y1, x2, y2, col, mid, lbl) {
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', `M${x1},${y1} H${x2} V${y2}`);
+    path.setAttribute('stroke', col);
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-dasharray', '6,3');
+    path.setAttribute('marker-end', `url(#${mid})`);
+    svg.appendChild(path);
+    if (lbl) {
+      const txt = document.createElementNS(ns, 'text');
+      txt.setAttribute('x', (x1 + x2) / 2);
+      txt.setAttribute('y', y1 - 5);
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('font-size', '9');
+      txt.setAttribute('font-family', 'IBM Plex Mono,monospace');
+      txt.setAttribute('fill', col);
+      txt.setAttribute('opacity', '.9');
+      txt.textContent = lbl;
+      svg.appendChild(txt);
+    }
+  }
+
+  proc.arrows.forEach(a => {
+    if (a.from >= cards.length || a.to >= cards.length) return;
+    const c1 = rc(cards[a.from]);
+    const c2 = rc(cards[a.to]);
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--' + a.lane).trim();
+    if (Math.abs(c1.cy - c2.cy) < 50) {
+      const x1 = c1.cx > c2.cx ? c1.l : c1.r;
+      const x2 = c1.cx > c2.cx ? c2.r : c2.l;
+      line(x1, c1.cy, x2, c2.cy, hex, 'm' + a.lane, a.label);
+    } else {
+      const x1 = c1.r;
+      const x2 = c2.l > c1.r ? c2.l : c2.r;
+      line(x1, c1.cy, x2, c2.cy, hex, 'm' + a.lane, a.label);
+    }
+  });
+}
+
+function router() {
+  const hash = window.location.hash || '#/overview';
+  const path = hash.replace(/^#\//, '');
+
+  if (PROCESSES[path]) {
+    renderRouteBar(path);
+    renderProcess(path);
+  } else {
+    window.location.hash = '#/overview';
+    renderRouteBar('overview');
+    renderOverview();
+  }
+  window.scrollTo(0, 0);
+}
+
+window.addEventListener('hashchange', router);
+window.addEventListener('load', router);
+window.addEventListener('resize', () => {
+  const hash = window.location.hash.replace(/^#\//, '');
+  if (PROCESSES[hash]) drawArrows(PROCESSES[hash]);
+});
+</script>
+
+</body>
+</html>
