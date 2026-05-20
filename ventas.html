@@ -26,8 +26,7 @@ body{
 .routebar-left{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px}
 .routebar a{color:var(--ven);text-decoration:none;border:1px solid rgba(59,130,246,.4);padding:4px 10px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:11px;transition:all .15s}
 .routebar a:hover{background:rgba(59,130,246,.1);border-color:var(--ven)}
-.routebar-right{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);opacity:.5}
-.routebar-center{display:flex;align-items:center;gap:8px}
+.routebar-right{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);opacity:.7}
 .crumb-sep{color:var(--muted);opacity:.4}
 .crumb-active{color:var(--ven);font-weight:600}
 
@@ -356,7 +355,7 @@ body.pres-mode .pres-controls{display:flex}
 
 <div class="routebar" id="routebar"></div>
 <div id="app"></div>
-<footer>ODOO 17 ENTERPRISE · VENTAS · ARGUL Y CIA S.A. · PROYECTO SAP/ODOO ARGUL 2026 · v3.0 · alineado con MF Ventas v3.0</footer>
+<footer>ODOO 17 ENTERPRISE · VENTAS · ARGUL Y COMPAÑÍA S.A. · PROYECTO SAP/ODOO ARGUL 2026 · v3.2 · alineado con MF Ventas v3.2</footer>
 
 <script>
 /* ================================================================= */
@@ -384,8 +383,8 @@ const PROCESSES = {
     name: 'Gestión de Pedidos de Venta y Entregas',
     shortName: 'Pedidos y Entregas',
     type: 'Principal',
-    rqRange: 'RQ-VTA-01 a 08, 10',
-    rqCount: 9,
+    rqRange: 'RQ-VTA-01 a 08, 10, 26',
+    rqCount: 10,
     description: 'Ciclo completo del pedido de venta: recepción de OC, carga del PV por Planificación / Customer Service, tipos de pedido, múltiples fechas de entrega, asignación manual de stock, bloqueos con motivos, actualización de precios, cancelación de remanentes y circuito B.',
     shortDesc: 'OC → PV → tipos · fechas múltiples · bloqueos · entregas',
     lanes: ['cli','plan','ven','adm','dep'],
@@ -413,6 +412,12 @@ const PROCESSES = {
         title: 'Actualización de precios en líneas pendientes',
         desc: 'Ante cambios de precio (frecuentes por variación de resinas, hasta 4/mes), se re-pricean las líneas no facturadas contra la nueva lista. Si no es posible: cancelar remanentes + nuevo PV.',
         tags: ['RQ-VTA-04', 'listas de precios', 'variación resinas']
+      },
+      { n: '04b', label: 'Precio vigente', lane: 'sis', variant: 'sis',
+        title: 'Precio vigente al momento de la facturación',
+        desc: 'La facturación debe tomar el precio vigente en la lista de precios al momento de emitir la factura, no el precio cargado en el PV original si este fue modificado. Requiere mecanismo para que el sistema verifique el precio actual contra la lista activa antes de facturar.',
+        tags: ['RQ-VTA-26', 'gap', 'verificación precio vs lista activa al facturar'],
+        pill: { color: 'dep', text: '⚠ GAP · precio vigente al facturar · mecanismo de verificación pendiente' }
       },
       { n: '05', label: 'Bloqueo facturación', lane: 'adm', variant: 'adm2',
         title: 'Bloqueo de facturación con motivo',
@@ -444,10 +449,8 @@ const PROCESSES = {
     ],
     arrows: [
       { from: 0, to: 1, lane: 'plan', label: 'OC recibida' },
-      { from: 2, to: 3, lane: 'adm', label: 'PV → bloqueos' },
-      { from: 4, to: 5, lane: 'ven', label: 'facturación → entrega' },
-      { from: 5, to: 6, lane: 'plan', label: 'desbloqueado → preparar' },
-      { from: 7, to: 8, lane: 'ven', label: 'variante: tipo B' }
+      { from: 1, to: 2, lane: 'plan', label: 'partición fechas' },
+      { from: 5, to: 6, lane: 'plan', label: 'desbloqueado → preparar' }
     ]
   },
 
@@ -482,8 +485,7 @@ const PROCESSES = {
       }
     ],
     arrows: [
-      { from: 0, to: 1, lane: 'ven', label: 'PV → precios' },
-      { from: 1, to: 2, lane: 'plan', label: 'precios → stock' }
+      { from: 0, to: 2, lane: 'plan', label: 'demanda → planificación' }
     ]
   },
 
@@ -535,8 +537,7 @@ const PROCESSES = {
       }
     ],
     arrows: [
-      { from: 0, to: 1, lane: 'ven', label: 'recurrente · servicios' },
-      { from: 1, to: 2, lane: 'adm', label: 'servicios · activos' },
+      { from: 0, to: 1, lane: 'ven', label: 'servicios' },
       { from: 3, to: 4, lane: 'dep', label: 'sin factura' }
     ]
   },
@@ -579,7 +580,46 @@ const PROCESSES = {
     ],
     arrows: [
       { from: 0, to: 1, lane: 'adm', label: 'asignación clientes' },
-      { from: 1, to: 2, lane: 'ven', label: 'cliente → producto' }
+      { from: 2, to: 3, lane: 'ven', label: 'producto activo → venta' }
+    ]
+  },
+
+  /* ================= P-VTA-5 ================= */
+  p5: {
+    code: 'P-VTA-5',
+    name: 'Devoluciones y RMA',
+    shortName: 'RMA',
+    type: 'Operativo',
+    pcls: 'po',
+    rqRange: 'RQ-VTA-24, RQ-VTA-25',
+    rqCount: 2,
+    description: 'Circuito de devoluciones de clientes gestionado con el módulo OCA/rma (17.0). La devolución se vincula al PV original (RQ-VTA-24) y siempre genera una nota de crédito (RQ-VTA-25). La decisión sobre la acción (reposición, reparación, scrap) la toma Calidad.',
+    shortDesc: 'OCA/rma · RMA contra PV · siempre NC',
+    lanes: ['cli','ven','sis'],
+    intro: 'Las devoluciones se gestionan con OCA/rma vinculando la solicitud al pedido de venta original. Calidad evalúa el producto devuelto y decide la acción (ver MF Calidad). En todos los casos la devolución genera una nota de crédito (no existe devolución sin NC). El circuito cruza con Calidad (decisión RMA) e Inv/WMS (recepción del producto devuelto).',
+    archNote: 'MÓDULOS — OCA/rma (17.0, verificar estabilidad). CROSS-REFS — MF Calidad (decisión RMA) · MF Inv/WMS (recepción devolución). RQ-VTA-24: RMA vinculado al PV original. RQ-VTA-25: devolución siempre genera NC.',
+    steps: [
+      { n: '01', label: 'Solicitud RMA', lane: 'cli', variant: 'cli',
+        title: 'Cliente solicita devolución',
+        desc: 'El cliente reporta un problema de calidad y solicita la devolución. El equipo de Ventas o Customer Service inicia el proceso de RMA en Odoo vinculándolo al PV original.',
+        tags: ['RQ-VTA-24', 'OCA/rma', 'vinculado al PV original']
+      },
+      { n: '02', label: 'RMA contra PV', lane: 'ven', variant: 'ven',
+        title: 'RMA vinculado al pedido de venta original',
+        desc: 'El RMA se crea contra el PV original, heredando datos de producto, cantidad, precio y condiciones. Esto permite trazabilidad completa de la devolución. El módulo OCA/rma gestiona el circuito.',
+        tags: ['RQ-VTA-24', 'OCA/rma 17.0', 'trazabilidad contra PV'],
+        pill: { color: 'cli', text: '📦 OCA/rma · RMA vinculado a PV original · verificar estabilidad 17.0' }
+      },
+      { n: '03', label: 'Siempre NC', lane: 'sis', variant: 'sis',
+        title: 'Devolución genera siempre nota de crédito',
+        desc: 'Toda devolución genera una nota de crédito automáticamente, sin excepción. No existe el escenario de devolución a inventario sin impacto contable. La NC se vincula al PV y a la factura original.',
+        tags: ['RQ-VTA-25', 'OCA/rma', 'NC obligatoria en toda devolución'],
+        pill: { color: 'ven', text: '📦 OCA · NC siempre · no hay devolución sin impacto contable' }
+      }
+    ],
+    arrows: [
+      { from: 0, to: 1, lane: 'ven', label: 'solicitud → RMA' },
+      { from: 1, to: 2, lane: 'sis', label: 'RMA → NC automática' }
     ]
   }
 };
@@ -608,7 +648,31 @@ function el(tag, attrs={}, ...children){
 /* ROUTE BAR                                                          */
 /* ================================================================= */
 
-function renderRouteBar(route){const MF_URL='https://docs.google.com/document/d/1vEBoMy3uXdxqTzjDm5PRy7y6HuOf4-cZoikSGXFpbXA/view';const bar=document.getElementById('routebar');bar.innerHTML='';const left=el('div',{class:'routebar-left'});left.appendChild(el('span',{html:'🛒 VENTAS'}));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));const center=el('div',{class:'routebar-center'});center.appendChild(el('a',{href:'index.html'},'⬡ Mapa de Procesos (Nivel 1)'));if(route!=='overview'){center.appendChild(el('a',{href:'#/overview'},'📋 Procesos de Negocio (Nivel 2)'));}center.appendChild(el('a',{href:MF_URL,target:'_blank',rel:'noopener noreferrer'},'📄 Ver Modelo Funcional v3.0'));if(route==='overview'){left.appendChild(el('span',{class:'crumb-active'},'PROCESOS DE NEGOCIO'));}else{const proc=PROCESSES[route];left.appendChild(el('span',{},'Procesos de negocio'));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));left.appendChild(el('span',{class:'crumb-active'},proc.code+' · '+proc.shortName));}bar.appendChild(left);bar.appendChild(center);bar.appendChild(el('div',{class:'routebar-right'},'v3.0 · 27-abr-2026'));}
+function renderRouteBar(route){
+  const bar = document.getElementById('routebar');
+  bar.innerHTML = '';
+  const left = el('div',{class:'routebar-left'});
+  left.appendChild(el('span',{html:'🛒 VENTAS'}));
+  left.appendChild(el('span',{class:'crumb-sep',html:'/'}));
+
+  if(route === 'overview'){
+    left.appendChild(el('span',{class:'crumb-active'},'PROCESOS DE NEGOCIO'));
+  } else {
+    const proc = PROCESSES[route];
+    left.appendChild(el('span',{},'Procesos de negocio'));
+    left.appendChild(el('span',{class:'crumb-sep',html:'/'}));
+    left.appendChild(el('span',{class:'crumb-active'}, proc.code + ' · ' + proc.shortName));
+    const right = el('div',{class:'routebar-right'});
+    right.appendChild(el('a',{href:'#/overview'},'← Volver a overview'));
+    bar.appendChild(left);
+    bar.appendChild(right);
+    return;
+  }
+
+  bar.appendChild(left);
+  const right = el('div',{class:'routebar-right'},'v3.2 · 20-may-2026');
+  bar.appendChild(right);
+}
 
 /* ================================================================= */
 /* OVERVIEW VIEW                                                      */
@@ -619,12 +683,12 @@ function renderOverview(){
   app.innerHTML = '';
 
   const header = el('header',{class:'page'});
-  header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Ventas · Argul y Cia S.A.'));
-  header.appendChild(el('span',{class:'version-badge'},'Procesos de Negocio · 4 procesos'));
+  header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Ventas · Argul y Compañía S.A.'));
+  header.appendChild(el('span',{class:'version-badge'},'Procesos de Negocio · 5 procesos'));
   const h1 = el('h1');
   h1.innerHTML = 'Procesos de Negocio de <span>Ventas</span>';
   header.appendChild(h1);
-  header.appendChild(el('p',{},'Plataforma de navegación · 4 flujos de procesos · 22 requerimientos · 1 desarrollo (DEV-VTA-01)'));
+  header.appendChild(el('p',{},'Plataforma de navegación · 5 flujos de procesos · 25 requerimientos · 1 desarrollo (DEV-VTA-01) · 2 módulos OCA'));
   app.appendChild(header);
 
   const legend = el('div',{class:'legend'});
@@ -638,7 +702,7 @@ function renderOverview(){
 
   app.appendChild(el('div',{
     class:'intro-note',
-    html:'<strong>⬡ ORIENTACIÓN —</strong> Esta plataforma muestra los 4 procesos del área de Ventas. El proceso principal (<strong>P-VTA-1</strong>) cubre el ciclo completo del pedido; el proceso de interfaz (<strong>P-VTA-2</strong>) conecta con Planificación/MRP; las ventas especiales (<strong>P-VTA-3</strong>) cubren circuitos atípicos; y la gestión comercial (<strong>P-VTA-4</strong>) abarca maestros y CRM. Hacé click en cualquier tarjeta para ver el flujo detallado.'
+    html:'<strong>⬡ ORIENTACIÓN —</strong> Esta plataforma muestra los 5 procesos del área de Ventas. El proceso principal (<strong>P-VTA-1</strong>) cubre el ciclo completo del pedido; el proceso de interfaz (<strong>P-VTA-2</strong>) conecta con Planificación/MRP; las ventas especiales (<strong>P-VTA-3</strong>) cubren circuitos atípicos; la gestión comercial (<strong>P-VTA-4</strong>) abarca maestros y CRM; y las devoluciones (<strong>P-VTA-5</strong>) gestionan RMA con OCA/rma. Hacé click en cualquier tarjeta para ver el flujo detallado.'
   }));
 
   app.appendChild(el('div',{
@@ -676,7 +740,7 @@ function renderOverview(){
 
   const grid = el('div',{class:'pgrid'});
 
-  ['p1','p2','p3','p4'].forEach(pid => {
+  ['p1','p2','p3','p4','p5'].forEach(pid => {
     const p = PROCESSES[pid];
     const card = el('a',{class:`pcard ${pid}`, href:`#/${pid}`});
 
@@ -735,7 +799,7 @@ function renderProcess(pid){
   app.innerHTML = '';
 
   const header = el('header',{class:'page'});
-  header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Ventas · Argul y Cia S.A.'));
+  header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Ventas · Argul y Compañía S.A.'));
   header.appendChild(el('span',{class:'version-badge'}, proc.code + ' · ' + proc.type));
   const h1 = el('h1');
   h1.innerHTML = 'Proceso de <span>' + proc.shortName + '</span>';
@@ -884,7 +948,87 @@ function renderProcess(pid){
   requestAnimationFrame(() => drawArrows(proc));
 }
 
-function drawArrows(proc){const svg=document.getElementById('ov');if(!svg)return;const w=svg.parentElement,wr=w.getBoundingClientRect();svg.innerHTML='';const ns='http://www.w3.org/2000/svg';const d=document.createElementNS(ns,'defs');['ven','adm','plan','dep','cli','sis'].forEach(c=>{const hex=getComputedStyle(document.documentElement).getPropertyValue('--'+c).trim()||'#ccc';const mk=document.createElementNS(ns,'marker');mk.setAttribute('id','m'+c);mk.setAttribute('markerWidth','8');mk.setAttribute('markerHeight','8');mk.setAttribute('refX','7');mk.setAttribute('refY','3');mk.setAttribute('orient','auto');const pa=document.createElementNS(ns,'path');pa.setAttribute('d','M0,0 L0,6 L8,3 z');pa.setAttribute('fill',hex);mk.appendChild(pa);d.appendChild(mk)});svg.appendChild(d);if(!proc.arrows||!proc.arrows.length)return;const cards=Array.from(document.querySelectorAll('.card'));if(cards.length<2)return;function rc(e){const r=e.getBoundingClientRect();return{cx:r.left-wr.left+r.width/2,cy:r.top-wr.top+r.height/2,l:r.left-wr.left,r:r.right-wr.left,t:r.top-wr.top,b:r.bottom-wr.top}}proc.arrows.forEach(a=>{if(a.from>=cards.length||a.to>=cards.length)return;const c1=rc(cards[a.from]);const c2=rc(cards[a.to]);const hex=getComputedStyle(document.documentElement).getPropertyValue('--'+a.lane).trim();const p=document.createElementNS(ns,'path');const G=10;const sameLane=Math.abs(c1.cx-c2.cx)<80;let pathD,lblX,lblY;if(sameLane){pathD=`M${c1.cx},${c1.b+G} V${c2.t-G}`;lblX=c1.cx+12;lblY=(c1.b+c2.t)/2}else{const midY=c1.b+(c2.t-c1.b)/2;pathD=`M${c1.cx},${c1.b+G} V${midY} H${c2.cx} V${c2.t-G}`;lblX=(c1.cx+c2.cx)/2;lblY=midY-6}p.setAttribute('d',pathD);p.setAttribute('stroke',hex);p.setAttribute('stroke-width','2');p.setAttribute('fill','none');p.setAttribute('stroke-dasharray','6,3');p.setAttribute('marker-end',`url(#m${a.lane})`);svg.appendChild(p);if(a.label){const t=document.createElementNS(ns,'text');t.setAttribute('x',lblX);t.setAttribute('y',lblY);t.setAttribute('text-anchor',sameLane?'start':'middle');t.setAttribute('font-size','9');t.setAttribute('font-family','IBM Plex Mono,monospace');t.setAttribute('fill',hex);t.setAttribute('opacity','.8');t.textContent=a.label;svg.appendChild(t)}})}
+function drawArrows(proc){
+  const svg = document.getElementById('ov');
+  if(!svg) return;
+  const wrap = svg.parentElement, wr = wrap.getBoundingClientRect();
+  svg.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+  const defs = document.createElementNS(ns, 'defs');
+
+  ['ven','adm','plan','dep','cli','sis'].forEach(c => {
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--' + c).trim() || '#ccc';
+    const mk = document.createElementNS(ns, 'marker');
+    mk.setAttribute('id', 'm' + c);
+    mk.setAttribute('markerWidth','8');
+    mk.setAttribute('markerHeight','8');
+    mk.setAttribute('refX','7');
+    mk.setAttribute('refY','3');
+    mk.setAttribute('orient','auto');
+    const pth = document.createElementNS(ns, 'path');
+    pth.setAttribute('d','M0,0 L0,6 L8,3 z');
+    pth.setAttribute('fill', hex);
+    mk.appendChild(pth);
+    defs.appendChild(mk);
+  });
+  svg.appendChild(defs);
+
+  if(!proc.arrows || !proc.arrows.length) return;
+
+  const cards = Array.from(document.querySelectorAll('.card'));
+  if(cards.length < 2) return;
+
+  function rc(el){
+    const r = el.getBoundingClientRect();
+    return {
+      cx: r.left - wr.left + r.width / 2,
+      cy: r.top - wr.top + r.height / 2,
+      l:  r.left - wr.left,
+      r:  r.right - wr.left,
+      t:  r.top - wr.top,
+      b:  r.bottom - wr.top
+    };
+  }
+
+  function line(x1, y1, x2, y2, col, mid, lbl){
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', `M${x1},${y1} H${x2} V${y2}`);
+    path.setAttribute('stroke', col);
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke-dasharray', '6,3');
+    path.setAttribute('marker-end', `url(#${mid})`);
+    svg.appendChild(path);
+    if(lbl){
+      const txt = document.createElementNS(ns, 'text');
+      txt.setAttribute('x', (x1+x2)/2);
+      txt.setAttribute('y', y1 - 5);
+      txt.setAttribute('text-anchor','middle');
+      txt.setAttribute('font-size','9');
+      txt.setAttribute('font-family','IBM Plex Mono,monospace');
+      txt.setAttribute('fill', col);
+      txt.setAttribute('opacity','.9');
+      txt.textContent = lbl;
+      svg.appendChild(txt);
+    }
+  }
+
+  proc.arrows.forEach(a => {
+    if(a.from >= cards.length || a.to >= cards.length) return;
+    const c1 = rc(cards[a.from]);
+    const c2 = rc(cards[a.to]);
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--' + a.lane).trim();
+    if(Math.abs(c1.cy - c2.cy) < 50){
+      const x1 = c1.cx > c2.cx ? c1.l : c1.r;
+      const x2 = c1.cx > c2.cx ? c2.r : c2.l;
+      line(x1, c1.cy, x2, c2.cy, hex, 'm' + a.lane, a.label);
+    } else {
+      const x1 = c1.r;
+      const x2 = c2.l > c1.r ? c2.l : c2.r;
+      line(x1, c1.cy, x2, c2.cy, hex, 'm' + a.lane, a.label);
+    }
+  });
+}
 
 /* ================================================================= */
 /* ROUTER                                                             */
@@ -1000,8 +1144,8 @@ const FT = { analytics:false, presentation:false, context:false, minimap:false, 
 const FL = { dev:false, oca:false, critical:false, ven:false, adm:false, dep:false };
 let _zoom = 1;
 let _presIdx = 0;
-const PRES_ORDER = ['p1','p2','p3','p4'];
-const HEAT = { p1:5, p2:2, p3:3, p4:1 };
+const PRES_ORDER = ['p1','p2','p3','p4','p5'];
+const HEAT = { p1:5, p2:2, p3:3, p4:1, p5:3 };
 
 function collapseBar(){
   const bar = document.getElementById('featuresBar');

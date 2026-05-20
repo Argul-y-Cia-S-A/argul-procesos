@@ -25,8 +25,7 @@ body{
 .routebar-left{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px}
 .routebar a{color:var(--pro);text-decoration:none;border:1px solid rgba(139,92,246,.4);padding:4px 10px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:11px;transition:all .15s}
 .routebar a:hover{background:rgba(139,92,246,.1);border-color:var(--pro)}
-.routebar-right{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);opacity:.5}
-.routebar-center{display:flex;align-items:center;gap:8px}
+.routebar-right{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);opacity:.7}
 .crumb-sep{color:var(--muted);opacity:.4}
 .crumb-active{color:var(--pro);font-weight:600}
 
@@ -288,7 +287,7 @@ body.pres-mode .pres-controls{display:flex}
 
 <div class="routebar" id="routebar"></div>
 <div id="app"></div>
-<footer>ODOO 17 ENTERPRISE · PRODUCCIÓN Y GESTIÓN DE CALIDAD · ARGUL Y CIA S.A. · PROYECTO SAP/ODOO ARGUL 2026 · v5.0 · alineado con MF Producción y Calidad v3.1</footer>
+<footer>ODOO 17 ENTERPRISE · PRODUCCIÓN · ARGUL Y COMPAÑÍA S.A. · PROYECTO SAP/ODOO ARGUL 2026 · v5.2 · alineado con MF Producción v5.2</footer>
 
 <script>
 /* ================================================================= */
@@ -364,17 +363,16 @@ const PROCESSES = {
         desc: 'Cada molde tiene definidas las inyectoras compatibles (grupos de tonelaje: 150T, 350T). El sistema sugiere o restringe la asignación. En Libus la operación solo permite una máquina por molde; el MF Planificación identificó el gap de reasignación automática.',
         tags: ['RQ-PRO-06', 'DEV mrp_tool_tracking', 'gap de reasignación · pendiente de prueba']
       },
-      { n: '08', label: 'Subproductos', lane: 'pro', variant: 'pro',
-        title: 'Molde con dos salidas de producto (subproductos)',
-        desc: 'Algunos moldes generan dos códigos simultáneamente. Odoo 17 soporta subproductos nativamente (<em>mrp_byproduct</em> en core). Una misma OF declara dos productos desde la BOM. La App MES debe ver ambos desde la misma orden.',
-        tags: ['RQ-PRO-07', 'estándar · mrp_byproduct nativo', 'coordinar prueba con Gustavo (App MES)']
+      { n: '08', label: 'Moldes familiares', lane: 'pro', variant: 'pro',
+        title: 'Molde familiar con dos salidas de producto (subproductos)',
+        desc: 'Algunos moldes ("moldes familiares") generan dos códigos simultáneamente desde distintas posiciones. La BOM declara ambos productos como salida. El módulo <em>mrp_byproduct</em> (OCA) gestiona estos subproductos. El MRP de Planificación debe considerar que cuando una posición se produce, la otra también se genera (RQ-PLA-30). La App MES debe ver ambos desde la misma orden.',
+        tags: ['RQ-PRO-07', 'OCA · mrp_byproduct', 'coordinar prueba con Gustavo (App MES) · alineado con PLA-30'],
+        pill: { color: 'cal', text: '📦 OCA mrp_byproduct · moldes familiares · impacto en MRP (RQ-PLA-30)' }
       }
     ],
     arrows: [
-      { from: 0, to: 2, lane: 'sis', label: 'ruta → centros' },
-      { from: 3, to: 4, lane: 'sis', label: 'configuración → moldes' },
-      { from: 4, to: 5, lane: 'pla', label: 'molde → BOM' },
-      { from: 6, to: 7, lane: 'pro', label: 'restricción → producción' }
+      { from: 0, to: 2, lane: 'sis', label: 'ruta → centro de trabajo' },
+      { from: 4, to: 5, lane: 'pla', label: 'molde → BOM' }
     ]
   },
 
@@ -414,7 +412,9 @@ const PROCESSES = {
         tags: ['RQ-PRO-10', 'fuera de alcance Etapa 1', 'Etapa 2 · Don PC']
       }
     ],
-    arrows: []
+    arrows: [
+      { from: 0, to: 1, lane: 'ing', label: 'reparación → liberación' }
+    ]
   },
 
   /* ============================================================= */
@@ -461,8 +461,7 @@ const PROCESSES = {
       }
     ],
     arrows: [
-      { from: 0, to: 1, lane: 'pro', label: 'OP → ejecución' },
-      { from: 1, to: 2, lane: 'pro', label: 'producción → no conforme' }
+      { from: 0, to: 1, lane: 'pro', label: 'OP → ejecución' }
     ]
   },
 
@@ -604,36 +603,42 @@ const PROCESSES = {
     shortName: 'Ensayos',
     type: 'Operativo',
     pcls: 'po',
-    rqRange: 'RQ-PRO-26',
-    rqCount: 1,
-    description: 'Fabricaciones de moldes nuevos o pruebas de material, muy frecuentes (una o más por día). Hoy no se gestionan en SAP. Generan indisponibilidad real de la inyectora. Deben aparecer en el Gantt y estar planificadas.',
-    shortDesc: 'Orden de ensayo en Gantt · flag ensayo · tipo MO especial',
-    inputs: 'Solicitud de ensayo desde Desarrollo de Producto (Miguel Caro) · molde de prueba',
-    outputs: 'Orden de ensayo en Gantt · datos registrados (molde, máquina, material, ciclo medido)',
-    lanes: ['ing','pla','sis'],
-    intro: 'Los ensayos se planifican hoy en Don PC y se comunican en papel. La App MES registra datos del ensayo. Al pasar a Odoo, estas órdenes deben aparecer en el Gantt y bloquear la capacidad de la inyectora asignada. Las órdenes de ensayo no tienen producto terminado definido ni BOM estándar (son para productos en desarrollo). Se requiere un tipo de MO con campos descriptivos y un flag «ensayo» consultable por la App MES.',
-    archNote: 'INPUTS — solicitud de ensayo de Desarrollo de Producto (Miguel Caro). OUTPUTS — orden en Gantt · bloqueo de capacidad · datos del ensayo registrados. GAP — analizar con Franco si se configura con MO de producto placeholder o requiere desarrollo.',
+    rqRange: 'RQ-PRO-26, RQ-PRO-35',
+    rqCount: 2,
+    description: 'Fabricaciones de moldes nuevos o pruebas de material, muy frecuentes (una o más por día). Hoy no se gestionan en SAP. Generan indisponibilidad real de la inyectora. Deben aparecer en el Gantt y estar planificadas. Los materiales de ensayo se solicitan por separado al depósito (RQ-PRO-35).',
+    shortDesc: 'Orden de ensayo en Gantt · flag ensayo · materiales ensayo · cadena Ing→Pla→Pro',
+    inputs: 'Solicitud de ensayo desde Ingeniería (Miguel Caro) · molde de prueba · materiales de ensayo',
+    outputs: 'Orden de ensayo en Gantt · datos registrados (molde, máquina, material, ciclo medido) · consumo de materiales de ensayo',
+    lanes: ['ing','pla','pro','sis'],
+    intro: 'Los ensayos se planifican hoy en Don PC y se comunican en papel. La cadena completa es: Ingeniería origina la solicitud (RQ-ING-26), Planificación asigna máquina y tiempo en el Gantt (RQ-PLA-31), Producción ejecuta con la App MES. Las órdenes de ensayo no tienen producto terminado definido ni BOM estándar (son para productos en desarrollo). Los materiales de ensayo se solicitan al depósito de forma independiente (RQ-PRO-35).',
+    archNote: 'INPUTS — solicitud de ensayo de Ingeniería (RQ-ING-26). OUTPUTS — orden en Gantt · bloqueo de capacidad · datos del ensayo registrados · consumo de materiales. CADENA — Ing(ING-26)→Pla(PLA-31)→Pro(PRO-26). RQ-PRO-35 — materiales de ensayo.',
     steps: [
       { n: '01', label: 'Solicitud ensayo', lane: 'ing', variant: 'ing',
-        title: 'Solicitud de ensayo desde Desarrollo de Producto',
-        desc: 'Miguel Caro o el equipo técnico solicita el ensayo de un molde nuevo o prueba de material. Hoy la solicitud se gestiona en Don PC y se comunica en papel a Producción.',
-        tags: ['RQ-PRO-26', 'gap', 'coordinar con Planificación y Desarrollo de Producto']
+        title: 'Ingeniería origina solicitud de ensayo (RQ-ING-26)',
+        desc: 'Miguel Caro o el equipo de Ingeniería solicita el ensayo de un molde nuevo o prueba de material. La solicitud se origina en Ingeniería (RQ-ING-26) y se gestiona como orden de ensayo en Odoo, reemplazando Don PC para este circuito.',
+        tags: ['RQ-PRO-26', 'gap', 'cadena Ing(ING-26) → Pla(PLA-31) → Pro(PRO-26)']
       },
       { n: '02', label: 'OF ensayo en Gantt', lane: 'pla', variant: 'pla',
-        title: 'Planificación genera orden de ensayo en el Gantt',
-        desc: 'La orden de ensayo aparece en el Gantt y bloquea la capacidad de la inyectora asignada. La App MES identifica la orden como ensayo (flag) y no la contabiliza como producción regular.',
-        tags: ['RQ-PRO-26', 'gap', 'tipo MO con flag ensayo · analizar con Franco'],
-        pill: { color: 'sis', text: '⚠ GAP · tipo de MO especial con flag ensayo · analizar con Franco Nicolau' }
+        title: 'Planificación asigna máquina y tiempo en el Gantt (RQ-PLA-31)',
+        desc: 'Planificación recibe la solicitud y genera la orden de ensayo en el Gantt, asignando inyectora y bloque horario. La App MES identifica la orden como ensayo (flag) y no la contabiliza como producción regular. La capacidad de la inyectora queda bloqueada durante el ensayo.',
+        tags: ['RQ-PRO-26', 'gap', 'tipo MO con flag ensayo · alineado con RQ-PLA-31'],
+        pill: { color: 'sis', text: '⚠ GAP · tipo de MO especial con flag ensayo · cadena ING-26→PLA-31→PRO-26' }
       },
-      { n: '03', label: 'Datos registrados', lane: 'sis', variant: 'sis2',
-        title: 'Registro de datos del ensayo en Odoo',
-        desc: 'Los datos del ensayo (molde, máquina, material, ciclo medido) quedan registrados en Odoo vinculados a la OF de ensayo. Reemplaza el registro en Don PC para esta información.',
+      { n: '03', label: 'Ejecución ensayo', lane: 'pro', variant: 'pro',
+        title: 'Producción ejecuta el ensayo con App MES',
+        desc: 'El operario ejecuta el ensayo en la inyectora asignada. La App MES registra datos del ensayo (molde, máquina, material, ciclo medido) vinculados a la OF de ensayo. Reemplaza el registro en Don PC para esta información.',
         tags: ['RQ-PRO-26', 'gap', 'campos descriptivos sin BOM estándar']
+      },
+      { n: '04', label: 'Materiales ensayo', lane: 'pro', variant: 'pro2',
+        title: 'Solicitud de materiales para ensayo al depósito',
+        desc: 'Los materiales necesarios para el ensayo (materia prima, insertos, etc.) se solicitan al depósito de forma independiente a la solicitud regular de producción. El pedido de materiales de ensayo no impacta el MRP estándar y se gestiona como stock_request específico.',
+        tags: ['RQ-PRO-35', 'gap', 'solicitud independiente · no impacta MRP regular'],
+        pill: { color: 'dep', text: '⚠ GAP · materiales ensayo · solicitud independiente del circuito regular' }
       }
     ],
     arrows: [
       { from: 0, to: 1, lane: 'pla', label: 'solicitud → Gantt' },
-      { from: 1, to: 2, lane: 'sis', label: 'Gantt → datos' }
+      { from: 1, to: 2, lane: 'pro', label: 'Gantt → ejecución' }
     ]
   },
 
@@ -657,10 +662,10 @@ const PROCESSES = {
     archNote: 'INPUTS — necesidad de materiales en PR · lote requerido. OUTPUTS — solicitud de transferencia → picking en Odoo → impacto en App WMS Hangel. MÓDULOS — stock_request (OCA/stock-logistics-warehouse 17.0). DEV — DEV-PLA-03 (MF Planificación) para abastecimiento automático.',
     steps: [
       { n: '01', label: 'Solicitud al PR', lane: 'pro', variant: 'pro',
-        title: 'Solicitud de abastecimiento al PR por sistema',
-        desc: 'Los supervisores generan solicitudes al depósito con <em>stock_request</em> (OCA). La solicitud dispara el picking en Odoo e impacta en la App WMS Hangel. Todo el movimiento queda registrado. Cubre los sub-escenarios a y b de RQ-INV-13.',
-        tags: ['RQ-PRO-27', 'OCA · stock_request', 'ya implementado en Libus'],
-        pill: { color: 'cal', text: '📦 OCA stock_request · ya implementado en Libus · perfiles de acceso a definir' }
+        title: 'Solicitud de abastecimiento al PR por sistema (incl. fuera de horario)',
+        desc: 'Los supervisores generan solicitudes al depósito con <em>stock_request</em> (OCA). La solicitud dispara el picking en Odoo e impacta en la App WMS Hangel. Todo el movimiento queda registrado. Cubre los sub-escenarios a y b de RQ-INV-13. La aprobación (APR) debe poder realizarse fuera de horario administrativo para no frenar la producción en turnos nocturnos.',
+        tags: ['RQ-PRO-27', 'OCA · stock_request', 'APR fuera horario · ya implementado en Libus'],
+        pill: { color: 'cal', text: '📦 OCA stock_request · APR fuera de horario habilitada · perfiles de acceso a definir' }
       },
       { n: '02', label: 'Lote específico', lane: 'pro', variant: 'pro2',
         title: 'Solicitud con especificación de lote',
@@ -675,7 +680,7 @@ const PROCESSES = {
       }
     ],
     arrows: [
-      { from: 1, to: 2, lane: 'sis', label: 'manual → MRP automático' }
+      { from: 0, to: 1, lane: 'pro', label: 'solicitud + lote' }
     ]
   },
 
@@ -758,7 +763,30 @@ function el(tag, attrs={}, ...children){
 /* ================================================================= */
 /* ROUTE BAR                                                          */
 /* ================================================================= */
-function renderRouteBar(route){const MF_URL='https://docs.google.com/document/d/1zXDzlpjxUiFMI1OyHwRa1RBJcporuShFdadip0hoaHU/view';const bar=document.getElementById('routebar');bar.innerHTML='';const left=el('div',{class:'routebar-left'});left.appendChild(el('span',{html:'🏭 PRODUCCIÓN'}));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));const center=el('div',{class:'routebar-center'});center.appendChild(el('a',{href:'index.html'},'⬡ Mapa de Procesos (Nivel 1)'));if(route!=='overview'){center.appendChild(el('a',{href:'#/overview'},'📋 Procesos de Negocio (Nivel 2)'));}center.appendChild(el('a',{href:MF_URL,target:'_blank',rel:'noopener noreferrer'},'📄 Ver Modelo Funcional v5.0'));if(route==='overview'){left.appendChild(el('span',{class:'crumb-active'},'PROCESOS DE NEGOCIO'));}else{const proc=PROCESSES[route];left.appendChild(el('span',{},'Procesos de negocio'));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));left.appendChild(el('span',{class:'crumb-active'},proc.code+' · '+proc.shortName));}bar.appendChild(left);bar.appendChild(center);bar.appendChild(el('div',{class:'routebar-right'},'v5.0 · 30-abr-2026'));}
+function renderRouteBar(route){
+  const bar = document.getElementById('routebar');
+  bar.innerHTML = '';
+  const left = el('div',{class:'routebar-left'});
+  left.appendChild(el('span',{html:'🏭 PRODUCCIÓN'}));
+  left.appendChild(el('span',{class:'crumb-sep',html:'/'}));
+
+  if(route === 'overview'){
+    left.appendChild(el('span',{class:'crumb-active'},'PROCESOS DE NEGOCIO'));
+  } else {
+    const proc = PROCESSES[route];
+    left.appendChild(el('span',{},'Procesos de negocio'));
+    left.appendChild(el('span',{class:'crumb-sep',html:'/'}));
+    left.appendChild(el('span',{class:'crumb-active'}, proc.code + ' · ' + proc.shortName));
+    const right = el('div',{class:'routebar-right'});
+    right.appendChild(el('a',{href:'#/overview'},'← Volver a overview'));
+    bar.appendChild(left);
+    bar.appendChild(right);
+    return;
+  }
+  bar.appendChild(left);
+  const right = el('div',{class:'routebar-right'},'v5.2 · 20-may-2026');
+  bar.appendChild(right);
+}
 
 /* ================================================================= */
 /* OVERVIEW VIEW                                                      */
@@ -768,12 +796,12 @@ function renderOverview(){
   app.innerHTML = '';
 
   const header = el('header',{class:'page'});
-  header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Producción · Argul y Cia S.A.'));
+  header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Producción · Argul y Compañía S.A.'));
   header.appendChild(el('span',{class:'version-badge'},'Procesos de Negocio · 9 procesos'));
   const h1 = el('h1');
   h1.innerHTML = 'Procesos de Negocio de <span class="pro">Producción</span>';
   header.appendChild(h1);
-  header.appendChild(el('p',{},'Plataforma de navegación · 9 flujos · 34 requerimientos · 4 desarrollos (DEV-PRO-01/02/03/04) · 3 módulos OCA'));
+  header.appendChild(el('p',{},'Plataforma de navegación · 9 flujos · 35 requerimientos · 4 desarrollos (DEV-PRO-01/02/03/04) · 4 módulos OCA'));
   app.appendChild(header);
 
   const legend = el('div',{class:'legend'});
@@ -792,7 +820,7 @@ function renderOverview(){
 
   app.appendChild(el('div',{
     class:'arch-note',
-    html:'<strong>⬢ DESARROLLOS Y MÓDULOS OCA —</strong> Módulos OCA confirmados: <strong>stock_request</strong> (implementado en Libus) · <strong>mrp_byproduct</strong> (nativo Odoo 17). Desarrollos custom: <strong>DEV-PRO-01</strong> (código cliente en rótulo) · <strong>DEV-PRO-02</strong> (wizard Producto No Conforme, compartido con Calidad) · <strong>DEV-PRO-03</strong> (endpoint cámara) · <strong>DEV-PRO-04</strong> (stock 901). Módulos de calidad y desarrollos asociados se documentan en el MF/HTML de Calidad.'
+    html:'<strong>⬢ DESARROLLOS Y MÓDULOS OCA —</strong> Módulos OCA confirmados: <strong>stock_request</strong> (implementado en Libus) · <strong>mrp_byproduct</strong> (OCA, moldes familiares — alineado con RQ-PLA-30). Desarrollos custom: <strong>DEV-PRO-01</strong> (código cliente en rótulo) · <strong>DEV-PRO-02</strong> (wizard Producto No Conforme, compartido con Calidad) · <strong>DEV-PRO-03</strong> (endpoint cámara) · <strong>DEV-PRO-04</strong> (stock 901). Módulos de calidad y desarrollos asociados se documentan en el MF/HTML de Calidad.'
   }));
 
   const overviewWrap = el('div',{class:'overview-wrap'});
@@ -898,7 +926,7 @@ function renderProcess(pid){
   app.innerHTML = '';
 
   const header = el('header',{class:'page'});
-  header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Producción · Argul y Cia S.A.'));
+  header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Producción · Argul y Compañía S.A.'));
   header.appendChild(el('span',{class:'version-badge'}, proc.code + ' · ' + proc.type));
   const h1 = el('h1');
   const isCAL = proc.code.startsWith('P-CAL');
@@ -1025,7 +1053,73 @@ function renderProcess(pid){
   requestAnimationFrame(() => drawArrows(proc));
 }
 
-function drawArrows(proc){const svg=document.getElementById('ov');if(!svg)return;const w=svg.parentElement,wr=w.getBoundingClientRect();svg.innerHTML='';const ns='http://www.w3.org/2000/svg';const d=document.createElementNS(ns,'defs');['pro','cal','pla','dep','sis','ing'].forEach(c=>{const hex=getComputedStyle(document.documentElement).getPropertyValue('--'+c).trim()||'#ccc';const mk=document.createElementNS(ns,'marker');mk.setAttribute('id','m'+c);mk.setAttribute('markerWidth','8');mk.setAttribute('markerHeight','8');mk.setAttribute('refX','7');mk.setAttribute('refY','3');mk.setAttribute('orient','auto');const pa=document.createElementNS(ns,'path');pa.setAttribute('d','M0,0 L0,6 L8,3 z');pa.setAttribute('fill',hex);mk.appendChild(pa);d.appendChild(mk)});svg.appendChild(d);if(!proc.arrows||!proc.arrows.length)return;const cards=Array.from(document.querySelectorAll('.card'));if(cards.length<2)return;function rc(e){const r=e.getBoundingClientRect();return{cx:r.left-wr.left+r.width/2,cy:r.top-wr.top+r.height/2,l:r.left-wr.left,r:r.right-wr.left,t:r.top-wr.top,b:r.bottom-wr.top}}proc.arrows.forEach(a=>{if(a.from>=cards.length||a.to>=cards.length)return;const c1=rc(cards[a.from]);const c2=rc(cards[a.to]);const hex=getComputedStyle(document.documentElement).getPropertyValue('--'+a.lane).trim();const p=document.createElementNS(ns,'path');const G=10;const sameLane=Math.abs(c1.cx-c2.cx)<80;let pathD,lblX,lblY;if(sameLane){pathD=`M${c1.cx},${c1.b+G} V${c2.t-G}`;lblX=c1.cx+12;lblY=(c1.b+c2.t)/2}else{const midY=c1.b+(c2.t-c1.b)/2;pathD=`M${c1.cx},${c1.b+G} V${midY} H${c2.cx} V${c2.t-G}`;lblX=(c1.cx+c2.cx)/2;lblY=midY-6}p.setAttribute('d',pathD);p.setAttribute('stroke',hex);p.setAttribute('stroke-width','2');p.setAttribute('fill','none');p.setAttribute('stroke-dasharray','6,3');p.setAttribute('marker-end',`url(#m${a.lane})`);svg.appendChild(p);if(a.label){const t=document.createElementNS(ns,'text');t.setAttribute('x',lblX);t.setAttribute('y',lblY);t.setAttribute('text-anchor',sameLane?'start':'middle');t.setAttribute('font-size','9');t.setAttribute('font-family','IBM Plex Mono,monospace');t.setAttribute('fill',hex);t.setAttribute('opacity','.8');t.textContent=a.label;svg.appendChild(t)}})}
+function drawArrows(proc){
+  const svg = document.getElementById('ov');
+  if(!svg) return;
+  const wrap = svg.parentElement, wr = wrap.getBoundingClientRect();
+  svg.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+  const defs = document.createElementNS(ns, 'defs');
+  ['pro','cal','pla','dep','sis','ing'].forEach(c => {
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--' + c).trim() || '#ccc';
+    const mk = document.createElementNS(ns, 'marker');
+    mk.setAttribute('id', 'm' + c);
+    mk.setAttribute('markerWidth','8');
+    mk.setAttribute('markerHeight','8');
+    mk.setAttribute('refX','7');
+    mk.setAttribute('refY','3');
+    mk.setAttribute('orient','auto');
+    const pth = document.createElementNS(ns, 'path');
+    pth.setAttribute('d','M0,0 L0,6 L8,3 z');
+    pth.setAttribute('fill', hex);
+    mk.appendChild(pth);
+    defs.appendChild(mk);
+  });
+  svg.appendChild(defs);
+  if(!proc.arrows || !proc.arrows.length) return;
+  const cards = Array.from(document.querySelectorAll('.card'));
+  if(cards.length < 2) return;
+  function rc(el){
+    const r = el.getBoundingClientRect();
+    return { cx: r.left-wr.left+r.width/2, cy: r.top-wr.top+r.height/2, l: r.left-wr.left, r: r.right-wr.left, t: r.top-wr.top, b: r.bottom-wr.top };
+  }
+  function line(x1,y1,x2,y2,col,mid,lbl){
+    const path = document.createElementNS(ns,'path');
+    path.setAttribute('d',`M${x1},${y1} H${x2} V${y2}`);
+    path.setAttribute('stroke',col);
+    path.setAttribute('stroke-width','2');
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke-dasharray','6,3');
+    path.setAttribute('marker-end',`url(#${mid})`);
+    svg.appendChild(path);
+    if(lbl){
+      const txt = document.createElementNS(ns,'text');
+      txt.setAttribute('x',(x1+x2)/2);
+      txt.setAttribute('y',y1-5);
+      txt.setAttribute('text-anchor','middle');
+      txt.setAttribute('font-size','9');
+      txt.setAttribute('font-family','IBM Plex Mono,monospace');
+      txt.setAttribute('fill',col);
+      txt.setAttribute('opacity','.9');
+      txt.textContent = lbl;
+      svg.appendChild(txt);
+    }
+  }
+  proc.arrows.forEach(a => {
+    if(a.from >= cards.length || a.to >= cards.length) return;
+    const c1 = rc(cards[a.from]), c2 = rc(cards[a.to]);
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--'+a.lane).trim();
+    if(Math.abs(c1.cy-c2.cy) < 50){
+      const x1 = c1.cx>c2.cx ? c1.l : c1.r;
+      const x2 = c1.cx>c2.cx ? c2.r : c2.l;
+      line(x1,c1.cy,x2,c2.cy,hex,'m'+a.lane,a.label);
+    } else {
+      const x1 = c1.r;
+      const x2 = c2.l > c1.r ? c2.l : c2.r;
+      line(x1,c1.cy,x2,c2.cy,hex,'m'+a.lane,a.label);
+    }
+  });
+}
 
 /* ================================================================= */
 /* ROUTER                                                             */
