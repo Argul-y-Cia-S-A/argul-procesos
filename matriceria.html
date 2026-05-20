@@ -27,6 +27,7 @@ body{
 .routebar-left{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px}
 .routebar a{color:var(--accent);text-decoration:none;border:1px solid rgba(6,182,212,.4);padding:4px 10px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:11px;transition:all .15s}
 .routebar a:hover{background:rgba(6,182,212,.1);border-color:var(--accent)}
+.routebar-center{display:flex;align-items:center;gap:8px}
 .routebar-right{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);opacity:.7}
 .crumb-sep{color:var(--muted);opacity:.4}
 .crumb-active{color:var(--accent);font-weight:600}
@@ -878,31 +879,7 @@ function el(tag, attrs={}, ...children){
 /* ROUTE BAR                                                          */
 /* ================================================================= */
 
-function renderRouteBar(route){
-  const bar = document.getElementById('routebar');
-  bar.innerHTML = '';
-  const left = el('div',{class:'routebar-left'});
-  left.appendChild(el('span',{html:'🔧 MATRICERÍA'}));
-  left.appendChild(el('span',{class:'crumb-sep',html:'/'}));
-
-  if(route === 'overview'){
-    left.appendChild(el('span',{class:'crumb-active'},'PROCESOS DE NEGOCIO'));
-    bar.appendChild(left);
-    const right = el('div',{class:'routebar-right'});
-    right.textContent = 'v4.2 · 20-may-2026';
-    bar.appendChild(right);
-  } else {
-    const proc = PROCESSES[route];
-    left.appendChild(el('span',{},'Procesos de Negocio'));
-    left.appendChild(el('span',{class:'crumb-sep',html:'/'}));
-    left.appendChild(el('span',{class:'crumb-active'}, proc.code + ' · ' + proc.shortName));
-    bar.appendChild(left);
-    const right = el('div',{class:'routebar-right'});
-    const backLink = el('a',{href:'#/overview'},'← Volver a overview');
-    right.appendChild(backLink);
-    bar.appendChild(right);
-  }
-}
+function renderRouteBar(route){const MF_URL='https://docs.google.com/document/d/1b1KnNos7Fmdi--77zprWMEHBk9NTiJ15RYNi2aLJXro/view';const bar=document.getElementById('routebar');bar.innerHTML='';const left=el('div',{class:'routebar-left'});left.appendChild(el('span',{html:'🔧 MATRICERÍA'}));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));const center=el('div',{class:'routebar-center'});center.appendChild(el('a',{href:'index.html'},'⬡ Mapa de Procesos (Nivel 1)'));if(route!=='overview'){center.appendChild(el('a',{href:'#/overview'},'📋 Procesos de Negocio (Nivel 2)'));}center.appendChild(el('a',{href:MF_URL,target:'_blank',rel:'noopener noreferrer'},'📄 Ver Modelo Funcional v4.2'));if(route==='overview'){left.appendChild(el('span',{class:'crumb-active'},'PROCESOS DE NEGOCIO'));}else{const proc=PROCESSES[route];left.appendChild(el('span',{},'Procesos de negocio'));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));left.appendChild(el('span',{class:'crumb-active'},proc.code+' · '+proc.shortName));}bar.appendChild(left);bar.appendChild(center);bar.appendChild(el('div',{class:'routebar-right'},'v4.2 · 20-may-2026'));}
 
 /* ================================================================= */
 /* OVERVIEW VIEW                                                      */
