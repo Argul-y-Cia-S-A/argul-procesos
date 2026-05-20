@@ -252,7 +252,7 @@ body.pres-mode .pres-controls{display:flex}
 <body>
 <div class="routebar" id="routebar"></div>
 <div id="app"></div>
-<footer>ODOO 17 ENTERPRISE · INVENTARIOS Y WMS · ARGUL Y CIA S.A. · PROYECTO SAP/ODOO ARGUL 2026 · v3.0</footer>
+<footer>ODOO 17 ENTERPRISE · INVENTARIOS Y WMS · ARGUL Y CIA S.A. · PROYECTO SAP/ODOO ARGUL 2026 · v3.3</footer>
 
 <!-- FEATURES v3.1 HTML -->
 <div class="features-bar" id="featuresBar">
@@ -811,13 +811,13 @@ function el(tag,attrs={},...children){const e=document.createElement(tag);for(co
 
 function activeLanes(proc){const used=new Set();proc.steps.forEach(s=>{if(s.lane)used.add(s.lane);});return proc.lanes.filter(l=>used.has(l));}
 
-function renderRouteBar(route){const MF_URL='https://docs.google.com/document/d/1PSJHp81PwGKe_U9mmjfIZBK3puc_N9AZkVg-uTTlw4g/view';const bar=document.getElementById('routebar');bar.innerHTML='';const left=el('div',{class:'routebar-left'});left.appendChild(el('span',{html:'🏭 INVENTARIOS Y WMS'}));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));const center=el('div',{class:'routebar-center'});center.appendChild(el('a',{href:'index.html'},'⬡ Mapa de Procesos (Nivel 1)'));if(route!=='overview'){center.appendChild(el('a',{href:'#/overview'},'📋 Procesos de Negocio (Nivel 2)'));}center.appendChild(el('a',{href:MF_URL,target:'_blank',rel:'noopener noreferrer'},'📄 Ver Modelo Funcional v3.0'));if(route==='overview'){left.appendChild(el('span',{class:'crumb-active'},'PROCESOS DE NEGOCIO'));}else{const proc=PROCESSES[route];left.appendChild(el('span',{},'Procesos de negocio'));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));left.appendChild(el('span',{class:'crumb-active'},proc.code+' · '+proc.shortName));}bar.appendChild(left);bar.appendChild(center);bar.appendChild(el('div',{class:'routebar-right'},'v3.0 · 29-abr-2026'));}
+function renderRouteBar(route){const MF_URL='https://docs.google.com/document/d/1PSJHp81PwGKe_U9mmjfIZBK3puc_N9AZkVg-uTTlw4g/view';const bar=document.getElementById('routebar');bar.innerHTML='';const left=el('div',{class:'routebar-left'});left.appendChild(el('span',{html:'🏭 INVENTARIOS Y WMS'}));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));const center=el('div',{class:'routebar-center'});center.appendChild(el('a',{href:'index.html'},'⬡ Mapa de Procesos (Nivel 1)'));if(route!=='overview'){center.appendChild(el('a',{href:'#/overview'},'📋 Procesos de Negocio (Nivel 2)'));}center.appendChild(el('a',{href:MF_URL,target:'_blank',rel:'noopener noreferrer'},'📄 Ver Modelo Funcional v3.3'));if(route==='overview'){left.appendChild(el('span',{class:'crumb-active'},'PROCESOS DE NEGOCIO'));}else{const proc=PROCESSES[route];left.appendChild(el('span',{},'Procesos de negocio'));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));left.appendChild(el('span',{class:'crumb-active'},proc.code+' · '+proc.shortName));}bar.appendChild(left);bar.appendChild(center);bar.appendChild(el('div',{class:'routebar-right'},'v3.3 · 20-may-2026'));}
 
 function renderOverview(){
   const app=document.getElementById('app');app.innerHTML='';
   const header=el('header',{class:'page'});
   header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Inventarios y WMS · Argul y Cia S.A.'));
-  header.appendChild(el('span',{class:'version-badge'},'23 procesos · MF v3.0'));
+  header.appendChild(el('span',{class:'version-badge'},'23 procesos · MF v3.3'));
   const h1=el('h1');h1.innerHTML='Procesos de Negocio de <span>Inventarios y WMS</span>';
   header.appendChild(h1);
   header.appendChild(el('p',{},'8 ingresos · 8 salidas · 2 ajustes · 3 pañol · 1 WMS · 1 ciclo de vida · Proyecto SAP / Odoo Argul 2026'));
