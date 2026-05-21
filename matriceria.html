@@ -5,12 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Matricería — Procesos de Negocio | Odoo 17 Enterprise · Argul 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script>(function(){var t=localStorage.getItem('argul-fp-theme');if(!t)t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';document.documentElement.setAttribute('data-theme',t);})()</script>
 <style>
-:root{
+:root,[data-theme="dark"]{
   --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--border:#21262d;--text:#e6edf3;--muted:#8b949e;--white:#fff;
   --mat:#06b6d4;--plan:#7c3aed;--com:#f97316;--inv:#f59e0b;--sub:#ef4444;--cont:#22c55e;--prod:#ec4899;
   --accent:#06b6d4;
 }
+[data-theme="light"]{
+  --bg:#f6f8fa;--surface:#ffffff;--surface2:#eef1f5;--border:#d0d7de;
+  --text:#1f2328;--muted:#656d76;--white:#1f2328;
+}
+
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   background:var(--bg);font-family:'IBM Plex Sans',sans-serif;color:var(--text);padding:20px 16px 60px;
@@ -370,6 +376,30 @@ body.pres-mode .pres-controls{display:flex}
 .fopt.on .fchk::after{content:'✓';position:absolute;top:-3px;left:1px;font-size:10px;color:var(--bg)}
 .card.dimmed{opacity:.18;pointer-events:none}
 .card.lit{box-shadow:0 0 10px currentColor;outline:1px solid currentColor}
+
+/* ===== THEME TOGGLE ===== */
+.theme-toggle{
+  background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+  width:28px;height:28px;border-radius:6px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:13px;transition:all .2s;flex-shrink:0;vertical-align:middle;
+  font-family:'IBM Plex Mono',monospace;margin-right:6px;padding:0;line-height:1;
+}
+.theme-toggle:hover{border-color:#8b5cf6;color:#8b5cf6;background:rgba(139,92,246,.08)}
+
+/* ===== LIGHT MODE OVERRIDES ===== */
+[data-theme="light"] body{background-image:none}
+[data-theme="light"] .pcard:hover{box-shadow:0 6px 20px rgba(0,0,0,.08)}
+[data-theme="light"] .macro-step:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+[data-theme="light"] .card:hover{box-shadow:0 3px 12px rgba(0,0,0,.08)}
+[data-theme="light"] .features-bar{box-shadow:0 4px 16px rgba(0,0,0,.10)}
+[data-theme="light"] .analytics-panel{box-shadow:0 4px 20px rgba(0,0,0,.10)}
+[data-theme="light"] .ctx-panel{box-shadow:0 4px 20px rgba(0,0,0,.10)}
+[data-theme="light"] .pres-controls{box-shadow:0 4px 20px rgba(0,0,0,.10)}
+[data-theme="light"] .minimap-box{box-shadow:0 2px 10px rgba(0,0,0,.08)}
+[data-theme="light"] .ctag{background:rgba(0,0,0,.04)}
+[data-theme="light"] .toggle-item.active .toggle-switch::after{color:#fff}
+[data-theme="light"] .fopt.on .fchk::after{color:#fff}
 </style>
 </head>
 <body>
@@ -1210,7 +1240,7 @@ function drawArrows(proc){
     rect.setAttribute('y', labelY - bbox.height + 2);
     rect.setAttribute('width', bbox.width + padX * 2);
     rect.setAttribute('height', bbox.height + padY);
-    rect.setAttribute('fill', '#0d1117');
+    rect.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim());
     rect.setAttribute('opacity', '0.92');
     rect.setAttribute('rx', '2');
     svg.appendChild(rect);
@@ -1473,5 +1503,41 @@ window.addEventListener('hashchange', ()=>{ setTimeout(()=>{ if(FT.analytics)ref
 window.addEventListener('load', ()=>{ setTimeout(()=>{ if(FT.analytics)refreshAnalytics(); },300); });
 </script>
 
+
+<script>
+/* ===== THEME TOGGLE ===== */
+(function(){
+  function setIcon(){
+    document.querySelectorAll('.theme-toggle').forEach(function(b){
+      var t=document.documentElement.getAttribute('data-theme')||'dark';
+      b.textContent=t==='dark'?'\u2600':'\u25CF';
+      b.title=t==='dark'?'Cambiar a modo claro':'Cambiar a modo oscuro';
+    });
+  }
+  function toggle(){
+    var cur=document.documentElement.getAttribute('data-theme')||'dark';
+    var nxt=cur==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',nxt);
+    localStorage.setItem('argul-fp-theme',nxt);
+    setIcon();
+  }
+  function inject(){
+    var r=document.querySelector('.routebar-right');
+    if(!r||r.querySelector('.theme-toggle'))return;
+    var b=document.createElement('button');
+    b.className='theme-toggle';
+    b.addEventListener('click',function(e){e.stopPropagation();toggle();});
+    r.insertBefore(b,r.firstChild);
+    setIcon();
+  }
+  if(typeof router==='function'){
+    var _r=router;
+    window.router=function(){_r.apply(this,arguments);inject();};
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',inject);}
+  else{inject();}
+  window.addEventListener('hashchange',function(){setTimeout(inject,50);});
+})();
+</script>
 </body>
 </html>
