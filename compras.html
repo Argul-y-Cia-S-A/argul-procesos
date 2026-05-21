@@ -338,7 +338,193 @@ function renderRouteBar(r){const MF_URL='https://docs.google.com/document/d/1Eef
 function activeLanes(p){const u=new Set();p.steps.forEach(s=>{if(s.lane)u.add(s.lane)});return p.lanes.filter(l=>u.has(l))}
 function renderOverview(){const a=document.getElementById('app');a.innerHTML='';const h=el('header',{class:'page'});h.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Compras · Argul y Cia S.A.'));h.appendChild(el('span',{class:'version-badge'},'Procesos de Negocio · 7 procesos'));const t=el('h1');t.innerHTML='Procesos de Negocio de <span>Compras</span>';h.appendChild(t);h.appendChild(el('p',{},'Plataforma de navegación · 6 flujos de procesos · 1 proceso transversal · 33 requerimientos · 1 desarrollo'));a.appendChild(h);const lg=el('div',{class:'legend'});Object.entries(LANES).forEach(([k,v])=>{const i=el('div',{class:'legend-item'});i.appendChild(el('div',{class:'legend-dot',style:`background:var(--${v.color})`}));i.appendChild(document.createTextNode(v.name));lg.appendChild(i)});a.appendChild(lg);a.appendChild(el('div',{class:'intro-note',html:'<strong>⬡ ORIENTACIÓN —</strong> Esta plataforma muestra los 7 procesos del área de Compras organizados por circuitos. <strong>P-COM-1</strong> (Compras Productivas) y <strong>P-COM-2</strong> (No Productivas) son los circuitos principales. <strong>P-COM-3</strong> muestra la vista de Compras del proceso de Matricería. <strong>P-COM-4</strong> cubre servicios con work attendance. <strong>P-COM-5</strong> es gestión de proveedores. <strong>P-COM-6</strong> agrupa consultas e informes (transversal). <strong>P-COM-7</strong> es mercadería de terceros (consignment). Hacé click en cualquier tarjeta para ver el flujo.'}));const ow=el('div',{class:'overview-wrap'});ow.appendChild(el('div',{class:'section-title'},'Macro-flujo · eslabonamiento de procesos'));const mf=el('div',{class:'macro-flow'});function ms(pid){const p=PROCESSES[pid];const s=el('a',{class:`macro-step ${pid}`,href:`#/${pid}`});s.appendChild(el('div',{class:'macro-code'},p.code+' · '+p.type.toUpperCase()));s.appendChild(el('div',{class:'macro-name'},p.shortName));s.appendChild(el('div',{class:'macro-hint'},p.shortDesc));return s}function ma(){return el('div',{class:'macro-arrow'},'→')}mf.appendChild(ms('p1'));mf.appendChild(ma());mf.appendChild(ms('p2'));mf.appendChild(ma());mf.appendChild(ms('p3'));mf.appendChild(ma());mf.appendChild(ms('p4'));mf.appendChild(ma());mf.appendChild(ms('p5'));ow.appendChild(mf);ow.appendChild(el('div',{class:'section-title'},'Procesos · click para navegar al diagrama'));const g=el('div',{class:'pgrid'});['p1','p2','p3','p4','p5','p6','p7'].forEach(pid=>{const p=PROCESSES[pid];const c=el('a',{class:`pcard ${pid}`,href:`#/${pid}`});const hd=el('div',{class:'pcard-head'});hd.appendChild(el('div',{class:'pcard-code'},p.code));hd.appendChild(el('div',{class:'pcard-type'},p.type));c.appendChild(hd);c.appendChild(el('div',{class:'pcard-title'},p.name));c.appendChild(el('div',{class:'pcard-desc',html:p.description}));const lr=el('div',{class:'pcard-lanes'});activeLanes(p).forEach(lk=>{const ln=LANES[lk];lr.appendChild(el('span',{class:`lane-chip ${lk}`},'● '+ln.short))});c.appendChild(lr);const mt=el('div',{class:'pcard-meta'});const g1=el('div',{class:'meta-group'});g1.appendChild(el('span',{class:'meta-label'},'RQs:'));g1.appendChild(el('span',{class:'meta-value'},p.rqCount));mt.appendChild(g1);const g2=el('div',{class:'meta-group'});g2.appendChild(el('span',{class:'meta-label'},'rango:'));g2.appendChild(el('span',{class:'meta-value'},p.rqRange));mt.appendChild(g2);const g3=el('div',{class:'meta-group'});g3.appendChild(el('span',{class:'meta-label'},'pasos:'));g3.appendChild(el('span',{class:'meta-value'},p.steps.filter(s=>!s.divider&&!s.groupWith).length));mt.appendChild(g3);c.appendChild(mt);c.appendChild(el('div',{class:'pcard-cta'},'Ver diagrama →'));g.appendChild(c)});ow.appendChild(g);a.appendChild(ow)}
 function renderProcess(pid){const proc=PROCESSES[pid];const a=document.getElementById('app');a.innerHTML='';const h=el('header',{class:'page'});h.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Compras · Argul y Cia S.A.'));h.appendChild(el('span',{class:'version-badge'},proc.code+' · '+proc.type));const t=el('h1');t.innerHTML='Proceso de <span>'+proc.shortName+'</span>';h.appendChild(t);h.appendChild(el('p',{},proc.name+' · '+proc.rqRange));a.appendChild(h);const la=activeLanes(proc);const lg=el('div',{class:'legend'});la.forEach(lk=>{const ln=LANES[lk];const i=el('div',{class:'legend-item'});i.appendChild(el('div',{class:'legend-dot',style:`background:var(--${ln.color})`}));i.appendChild(document.createTextNode(ln.name));lg.appendChild(i)});a.appendChild(lg);if(proc.intro)a.appendChild(el('div',{class:'intro-note',html:'<strong>⬡ CONTEXTO —</strong> '+proc.intro}));if(proc.archNote)a.appendChild(el('div',{class:'arch-note',html:'<strong>◆ '+proc.archNote}));const dw=el('div',{class:'diagram'});const dr=el('div',{class:'diagram-rel'});dw.appendChild(dr);const lanes=la;const tw=Math.min(90+lanes.length*330,1700);const sw=el('div',{class:'sw',id:'grid',style:`grid-template-columns:90px repeat(${lanes.length},minmax(260px,1fr));max-width:${tw}px;margin:0 auto;`});sw.appendChild(el('div',{class:'hdr-corner'},'PASO'));lanes.forEach((lk,i)=>{const ln=LANES[lk];const ec=(i===lanes.length-1)?' hdr-last':'';const hd=el('div',{class:`hdr hdr-${ln.color}${ec}`});hd.innerHTML=`${ln.icon}<br>${ln.name}<br><span style="font-size:7.5px;opacity:.7">${ln.subtitle}</span>`;sw.appendChild(hd)});const steps=proc.steps;let i=0;while(i<steps.length){const step=steps[i];if(step.divider){const dt=step.type||'';sw.appendChild(el('div',{class:'divider-row'+(dt?' '+dt:'')},step.divider));i++;continue}const rs=[step];let j=i+1;while(j<steps.length&&!steps[j].divider&&steps[j].groupWith===step.n){rs.push(steps[j]);j++}const sl=el('div',{class:'sl'});sl.innerHTML=`<strong>${step.n}</strong>${step.label||''}`;sw.appendChild(sl);const sbl={};rs.forEach(s=>{sbl[s.lane]=s});lanes.forEach((lk,idx)=>{const ln=LANES[lk];const il=(idx===lanes.length-1);const lc=el('div',{class:`lc ${ln.color}-bg${il?' last-col':''}`});if(sbl[lk]){const s=sbl[lk];const cd=el('div',{class:`card ${s.variant}`});cd.appendChild(el('div',{class:'card-title'},s.title));cd.appendChild(el('div',{class:'card-desc',html:s.desc}));if(s.tags&&s.tags.length){const td=el('div',{class:'card-tags'});s.tags.forEach(t=>td.appendChild(el('span',{class:'ctag'},t)));cd.appendChild(td)}if(s.cite)cd.appendChild(el('span',{class:'cite'},s.cite));if(s.pill)cd.appendChild(el('div',{class:`auto-pill auto-${s.pill.color}`,html:s.pill.text}));lc.appendChild(cd)}sw.appendChild(lc)});const ni=j;const hn=ni<steps.length;const ne=hn&&steps[ni].divider&&steps[ni].type==='end';if(hn&&!ne){let ns=null;let k=ni;while(k<steps.length){if(!steps[k].divider){ns=steps[k];break}k++}sw.appendChild(el('div',{class:'ar-corner'}));lanes.forEach((lk,idx)=>{const ln=LANES[lk];const il=(idx===lanes.length-1);const ar=el('div',{class:`ar ${ln.color}-bg${il?' last-col':''}`});if(ns&&ns.lane===lk){const v=el('div',{class:`varr ${ln.color}`});v.appendChild(el('div',{class:'sh'}));v.appendChild(el('div',{class:'hd'}));ar.appendChild(v)}sw.appendChild(ar)})}i=j}dr.appendChild(sw);const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','ov');svg.setAttribute('id','ov');dr.appendChild(svg);a.appendChild(dw);requestAnimationFrame(()=>drawArrows(proc))}
-function drawArrows(proc){const svg=document.getElementById('ov');if(!svg)return;const w=svg.parentElement,wr=w.getBoundingClientRect();svg.innerHTML='';const ns='http://www.w3.org/2000/svg';const d=document.createElementNS(ns,'defs');['com','plan','inv','adm','mat','prod','prov','cont'].forEach(c=>{const hex=getComputedStyle(document.documentElement).getPropertyValue('--'+c).trim()||'#ccc';const mk=document.createElementNS(ns,'marker');mk.setAttribute('id','m'+c);mk.setAttribute('markerWidth','8');mk.setAttribute('markerHeight','8');mk.setAttribute('refX','7');mk.setAttribute('refY','3');mk.setAttribute('orient','auto');const pa=document.createElementNS(ns,'path');pa.setAttribute('d','M0,0 L0,6 L8,3 z');pa.setAttribute('fill',hex);mk.appendChild(pa);d.appendChild(mk)});svg.appendChild(d);if(!proc.arrows||!proc.arrows.length)return;const cards=Array.from(document.querySelectorAll('.card'));if(cards.length<2)return;function rc(e){const r=e.getBoundingClientRect();return{cx:r.left-wr.left+r.width/2,cy:r.top-wr.top+r.height/2,l:r.left-wr.left,r:r.right-wr.left,t:r.top-wr.top,b:r.bottom-wr.top}}proc.arrows.forEach(a=>{if(a.from>=cards.length||a.to>=cards.length)return;const c1=rc(cards[a.from]);const c2=rc(cards[a.to]);const hex=getComputedStyle(document.documentElement).getPropertyValue('--'+a.lane).trim();const p=document.createElementNS(ns,'path');const G=10;const sameLane=Math.abs(c1.cx-c2.cx)<80;let pathD,lblX,lblY;if(sameLane){pathD=`M${c1.cx},${c1.b+G} V${c2.t-G}`;lblX=c1.cx+12;lblY=(c1.b+c2.t)/2}else{const midY=c1.b+(c2.t-c1.b)/2;pathD=`M${c1.cx},${c1.b+G} V${midY} H${c2.cx} V${c2.t-G}`;lblX=(c1.cx+c2.cx)/2;lblY=midY-6}p.setAttribute('d',pathD);p.setAttribute('stroke',hex);p.setAttribute('stroke-width','2');p.setAttribute('fill','none');p.setAttribute('stroke-dasharray','6,3');p.setAttribute('marker-end',`url(#m${a.lane})`);svg.appendChild(p);if(a.label){const t=document.createElementNS(ns,'text');t.setAttribute('x',lblX);t.setAttribute('y',lblY);t.setAttribute('text-anchor',sameLane?'start':'middle');t.setAttribute('font-size','9');t.setAttribute('font-family','IBM Plex Mono,monospace');t.setAttribute('fill',hex);t.setAttribute('opacity','.8');t.textContent=a.label;svg.appendChild(t)}})}
+function drawArrows(proc){
+  const svg = document.getElementById('ov');
+  if(!svg) return;
+  const wrap = svg.parentElement, wr = wrap.getBoundingClientRect();
+  svg.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+  const defs = document.createElementNS(ns, 'defs');
+
+  ['com','plan','inv','adm','mat','prod','prov','cont'].forEach(c => {
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--' + c).trim() || '#ccc';
+    const mk = document.createElementNS(ns, 'marker');
+    mk.setAttribute('id', 'm' + c);
+    mk.setAttribute('markerWidth','10');
+    mk.setAttribute('markerHeight','7');
+    mk.setAttribute('refX','9');
+    mk.setAttribute('refY','3.5');
+    mk.setAttribute('orient','auto');
+    const pth = document.createElementNS(ns, 'path');
+    pth.setAttribute('d','M0,0 L0,7 L10,3.5 z');
+    pth.setAttribute('fill', hex);
+    mk.appendChild(pth);
+    defs.appendChild(mk);
+  });
+  svg.appendChild(defs);
+
+  if(!proc.arrows || !proc.arrows.length) return;
+
+  const cards = Array.from(document.querySelectorAll('.card'));
+  if(cards.length < 2) return;
+
+  function rc(elem){
+    const r = elem.getBoundingClientRect();
+    return {
+      cx: r.left - wr.left + r.width / 2,
+      cy: r.top - wr.top + r.height / 2,
+      l:  r.left - wr.left,
+      r:  r.right - wr.left,
+      t:  r.top - wr.top,
+      b:  r.bottom - wr.top,
+      w:  r.width,
+      h:  r.height
+    };
+  }
+
+  // Helper: draw labeled path with bg rect for readability
+  function drawArrow(d, hex, lane, label, labelX, labelY, labelAnchor){
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', hex);
+    path.setAttribute('stroke-width', '1.6');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-dasharray', '5,3');
+    path.setAttribute('marker-end', `url(#m${lane})`);
+    path.setAttribute('opacity', '0.85');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(path);
+
+    if(!label) return;
+
+    // Measure label using hidden text
+    const tempText = document.createElementNS(ns, 'text');
+    tempText.setAttribute('font-size', '8.5');
+    tempText.setAttribute('font-family', 'IBM Plex Mono,monospace');
+    tempText.setAttribute('visibility', 'hidden');
+    tempText.textContent = label;
+    svg.appendChild(tempText);
+    const bbox = tempText.getBBox();
+    svg.removeChild(tempText);
+
+    const padX = 4, padY = 2;
+    let rectX = labelX;
+    if (labelAnchor === 'middle') rectX -= bbox.width / 2;
+    else if (labelAnchor === 'end') rectX -= bbox.width;
+
+    const rect = document.createElementNS(ns, 'rect');
+    rect.setAttribute('x', rectX - padX);
+    rect.setAttribute('y', labelY - bbox.height + 2);
+    rect.setAttribute('width', bbox.width + padX * 2);
+    rect.setAttribute('height', bbox.height + padY);
+    rect.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim());
+    rect.setAttribute('opacity', '0.92');
+    rect.setAttribute('rx', '2');
+    svg.appendChild(rect);
+
+    const txt = document.createElementNS(ns, 'text');
+    txt.setAttribute('x', labelX);
+    txt.setAttribute('y', labelY);
+    txt.setAttribute('text-anchor', labelAnchor);
+    txt.setAttribute('font-size', '8.5');
+    txt.setAttribute('font-family', 'IBM Plex Mono,monospace');
+    txt.setAttribute('fill', hex);
+    txt.setAttribute('font-weight', '600');
+    txt.textContent = label;
+    svg.appendChild(txt);
+  }
+
+  proc.arrows.forEach((a, ai) => {
+    if(a.from >= cards.length || a.to >= cards.length) return;
+    const c1 = rc(cards[a.from]);
+    const c2 = rc(cards[a.to]);
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--' + a.lane).trim();
+
+    const dx = c2.cx - c1.cx;
+    const dy = c2.cy - c1.cy;
+    const sameColumn = Math.abs(dx) < 40;
+    const sameRow = Math.abs(dy) < 40;
+
+    const pad = 4;
+    let d, labelX, labelY, labelAnchor = 'middle';
+
+    if(sameColumn && !sameRow){
+      // === SAME LANE, DIFFERENT ROWS ===
+      // Side-offset vertical path (alternates left/right to avoid overlap with inline arrows)
+      const side = (ai % 2 === 0) ? 1 : -1;
+      const sideOffset = (c1.w * 0.42) * side;
+      const x = c1.cx + sideOffset;
+      const y1 = c1.b + pad;
+      const y2 = c2.t - pad;
+      const stub = 6;
+
+      d = `M${c1.cx},${y1} L${c1.cx},${y1+stub} L${x},${y1+stub} L${x},${y2-stub} L${c2.cx},${y2-stub} L${c2.cx},${y2}`;
+
+      labelX = x + (side > 0 ? 6 : -6);
+      labelY = (y1 + y2) / 2 + 3;
+      labelAnchor = side > 0 ? 'start' : 'end';
+
+    } else if(sameRow && !sameColumn){
+      // === SAME ROW, DIFFERENT LANES (groupWith pairs) ===
+      // Clean horizontal connector
+      const goRight = dx > 0;
+      const x1 = goRight ? c1.r + pad : c1.l - pad;
+      const x2 = goRight ? c2.l - pad : c2.r + pad;
+      const y = c1.cy;
+
+      d = `M${x1},${y} L${x2},${y}`;
+      labelX = (x1 + x2) / 2;
+      labelY = y - 6;
+
+    } else if(!sameColumn && dy > 0){
+      // === DIAGONAL DOWN (most common) ===
+      // Clean L-shape (only 2 segments): vertical descent in source's column,
+      // then horizontal directly INTO the target's side. The arrowhead is on the
+      // horizontal segment so it points INTO the card (not stranded at the side
+      // pointing down). This avoids overlap with the swimlane's inline arrow
+      // which enters the target from the top.
+      const startX = c1.cx;
+      const startY = c1.b + pad;
+      const goRight = dx > 0;
+      const endX = goRight ? c2.l - pad : c2.r + pad;
+      const endY = c2.cy;
+
+      d = `M${startX},${startY} L${startX},${endY} L${endX},${endY}`;
+
+      // Label centered on the horizontal final segment, slightly above
+      labelX = (startX + endX) / 2;
+      labelY = endY - 6;
+
+    } else if(!sameColumn && dy < 0){
+      // === DIAGONAL UP (loops back) ===
+      // Detour out the side, up, across, down into top of target
+      const goRight = dx > 0;
+      const startSideX = goRight ? c1.r + pad : c1.l - pad;
+      const startY = c1.cy;
+      const endX = c2.cx;
+      const endY = c2.t - pad;
+      const detourX = goRight
+        ? Math.max(c1.r, c2.r) + 28
+        : Math.min(c1.l, c2.l) - 28;
+      const aboveY = endY - 18;
+
+      d = `M${startSideX},${startY} L${detourX},${startY} L${detourX},${aboveY} L${endX},${aboveY} L${endX},${endY}`;
+      labelX = detourX + (goRight ? 6 : -6);
+      labelY = (startY + aboveY) / 2;
+      labelAnchor = goRight ? 'start' : 'end';
+
+    } else {
+      // Fallback (shouldn't happen for valid arrow data)
+      d = `M${c1.cx},${c1.b + pad} L${c2.cx},${c2.t - pad}`;
+      labelX = (c1.cx + c2.cx) / 2 + 6;
+      labelY = (c1.b + c2.t) / 2;
+      labelAnchor = 'start';
+    }
+
+    drawArrow(d, hex, a.lane, a.label, labelX, labelY, labelAnchor);
+  });
+}
 function router(){const h=window.location.hash||'#/overview';const p=h.replace(/^#\//,'');if(PROCESSES[p]){renderRouteBar(p);renderProcess(p)}else{window.location.hash='#/overview';renderRouteBar('overview');renderOverview()}window.scrollTo(0,0)}
 window.addEventListener('hashchange',router);window.addEventListener('load',router);window.addEventListener('resize',()=>{const h=window.location.hash.replace(/^#\//,'');if(PROCESSES[h])drawArrows(PROCESSES[h])});
 </script>

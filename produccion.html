@@ -1068,64 +1068,184 @@ function drawArrows(proc){
   svg.innerHTML = '';
   const ns = 'http://www.w3.org/2000/svg';
   const defs = document.createElementNS(ns, 'defs');
+
   ['pro','cal','pla','dep','sis','ing'].forEach(c => {
     const hex = getComputedStyle(document.documentElement).getPropertyValue('--' + c).trim() || '#ccc';
     const mk = document.createElementNS(ns, 'marker');
     mk.setAttribute('id', 'm' + c);
-    mk.setAttribute('markerWidth','8');
-    mk.setAttribute('markerHeight','8');
-    mk.setAttribute('refX','7');
-    mk.setAttribute('refY','3');
+    mk.setAttribute('markerWidth','10');
+    mk.setAttribute('markerHeight','7');
+    mk.setAttribute('refX','9');
+    mk.setAttribute('refY','3.5');
     mk.setAttribute('orient','auto');
     const pth = document.createElementNS(ns, 'path');
-    pth.setAttribute('d','M0,0 L0,6 L8,3 z');
+    pth.setAttribute('d','M0,0 L0,7 L10,3.5 z');
     pth.setAttribute('fill', hex);
     mk.appendChild(pth);
     defs.appendChild(mk);
   });
   svg.appendChild(defs);
+
   if(!proc.arrows || !proc.arrows.length) return;
+
   const cards = Array.from(document.querySelectorAll('.card'));
   if(cards.length < 2) return;
-  function rc(el){
-    const r = el.getBoundingClientRect();
-    return { cx: r.left-wr.left+r.width/2, cy: r.top-wr.top+r.height/2, l: r.left-wr.left, r: r.right-wr.left, t: r.top-wr.top, b: r.bottom-wr.top };
+
+  function rc(elem){
+    const r = elem.getBoundingClientRect();
+    return {
+      cx: r.left - wr.left + r.width / 2,
+      cy: r.top - wr.top + r.height / 2,
+      l:  r.left - wr.left,
+      r:  r.right - wr.left,
+      t:  r.top - wr.top,
+      b:  r.bottom - wr.top,
+      w:  r.width,
+      h:  r.height
+    };
   }
-  function line(x1,y1,x2,y2,col,mid,lbl){
-    const path = document.createElementNS(ns,'path');
-    path.setAttribute('d',`M${x1},${y1} H${x2} V${y2}`);
-    path.setAttribute('stroke',col);
-    path.setAttribute('stroke-width','2');
-    path.setAttribute('fill','none');
-    path.setAttribute('stroke-dasharray','6,3');
-    path.setAttribute('marker-end',`url(#${mid})`);
+
+  // Helper: draw labeled path with bg rect for readability
+  function drawArrow(d, hex, lane, label, labelX, labelY, labelAnchor){
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', hex);
+    path.setAttribute('stroke-width', '1.6');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-dasharray', '5,3');
+    path.setAttribute('marker-end', `url(#m${lane})`);
+    path.setAttribute('opacity', '0.85');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
     svg.appendChild(path);
-    if(lbl){
-      const txt = document.createElementNS(ns,'text');
-      txt.setAttribute('x',(x1+x2)/2);
-      txt.setAttribute('y',y1-5);
-      txt.setAttribute('text-anchor','middle');
-      txt.setAttribute('font-size','9');
-      txt.setAttribute('font-family','IBM Plex Mono,monospace');
-      txt.setAttribute('fill',col);
-      txt.setAttribute('opacity','.9');
-      txt.textContent = lbl;
-      svg.appendChild(txt);
-    }
+
+    if(!label) return;
+
+    // Measure label using hidden text
+    const tempText = document.createElementNS(ns, 'text');
+    tempText.setAttribute('font-size', '8.5');
+    tempText.setAttribute('font-family', 'IBM Plex Mono,monospace');
+    tempText.setAttribute('visibility', 'hidden');
+    tempText.textContent = label;
+    svg.appendChild(tempText);
+    const bbox = tempText.getBBox();
+    svg.removeChild(tempText);
+
+    const padX = 4, padY = 2;
+    let rectX = labelX;
+    if (labelAnchor === 'middle') rectX -= bbox.width / 2;
+    else if (labelAnchor === 'end') rectX -= bbox.width;
+
+    const rect = document.createElementNS(ns, 'rect');
+    rect.setAttribute('x', rectX - padX);
+    rect.setAttribute('y', labelY - bbox.height + 2);
+    rect.setAttribute('width', bbox.width + padX * 2);
+    rect.setAttribute('height', bbox.height + padY);
+    rect.setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim());
+    rect.setAttribute('opacity', '0.92');
+    rect.setAttribute('rx', '2');
+    svg.appendChild(rect);
+
+    const txt = document.createElementNS(ns, 'text');
+    txt.setAttribute('x', labelX);
+    txt.setAttribute('y', labelY);
+    txt.setAttribute('text-anchor', labelAnchor);
+    txt.setAttribute('font-size', '8.5');
+    txt.setAttribute('font-family', 'IBM Plex Mono,monospace');
+    txt.setAttribute('fill', hex);
+    txt.setAttribute('font-weight', '600');
+    txt.textContent = label;
+    svg.appendChild(txt);
   }
-  proc.arrows.forEach(a => {
+
+  proc.arrows.forEach((a, ai) => {
     if(a.from >= cards.length || a.to >= cards.length) return;
-    const c1 = rc(cards[a.from]), c2 = rc(cards[a.to]);
-    const hex = getComputedStyle(document.documentElement).getPropertyValue('--'+a.lane).trim();
-    if(Math.abs(c1.cy-c2.cy) < 50){
-      const x1 = c1.cx>c2.cx ? c1.l : c1.r;
-      const x2 = c1.cx>c2.cx ? c2.r : c2.l;
-      line(x1,c1.cy,x2,c2.cy,hex,'m'+a.lane,a.label);
+    const c1 = rc(cards[a.from]);
+    const c2 = rc(cards[a.to]);
+    const hex = getComputedStyle(document.documentElement).getPropertyValue('--' + a.lane).trim();
+
+    const dx = c2.cx - c1.cx;
+    const dy = c2.cy - c1.cy;
+    const sameColumn = Math.abs(dx) < 40;
+    const sameRow = Math.abs(dy) < 40;
+
+    const pad = 4;
+    let d, labelX, labelY, labelAnchor = 'middle';
+
+    if(sameColumn && !sameRow){
+      // === SAME LANE, DIFFERENT ROWS ===
+      // Side-offset vertical path (alternates left/right to avoid overlap with inline arrows)
+      const side = (ai % 2 === 0) ? 1 : -1;
+      const sideOffset = (c1.w * 0.42) * side;
+      const x = c1.cx + sideOffset;
+      const y1 = c1.b + pad;
+      const y2 = c2.t - pad;
+      const stub = 6;
+
+      d = `M${c1.cx},${y1} L${c1.cx},${y1+stub} L${x},${y1+stub} L${x},${y2-stub} L${c2.cx},${y2-stub} L${c2.cx},${y2}`;
+
+      labelX = x + (side > 0 ? 6 : -6);
+      labelY = (y1 + y2) / 2 + 3;
+      labelAnchor = side > 0 ? 'start' : 'end';
+
+    } else if(sameRow && !sameColumn){
+      // === SAME ROW, DIFFERENT LANES (groupWith pairs) ===
+      // Clean horizontal connector
+      const goRight = dx > 0;
+      const x1 = goRight ? c1.r + pad : c1.l - pad;
+      const x2 = goRight ? c2.l - pad : c2.r + pad;
+      const y = c1.cy;
+
+      d = `M${x1},${y} L${x2},${y}`;
+      labelX = (x1 + x2) / 2;
+      labelY = y - 6;
+
+    } else if(!sameColumn && dy > 0){
+      // === DIAGONAL DOWN (most common) ===
+      // Clean L-shape (only 2 segments): vertical descent in source's column,
+      // then horizontal directly INTO the target's side. The arrowhead is on the
+      // horizontal segment so it points INTO the card (not stranded at the side
+      // pointing down). This avoids overlap with the swimlane's inline arrow
+      // which enters the target from the top.
+      const startX = c1.cx;
+      const startY = c1.b + pad;
+      const goRight = dx > 0;
+      const endX = goRight ? c2.l - pad : c2.r + pad;
+      const endY = c2.cy;
+
+      d = `M${startX},${startY} L${startX},${endY} L${endX},${endY}`;
+
+      // Label centered on the horizontal final segment, slightly above
+      labelX = (startX + endX) / 2;
+      labelY = endY - 6;
+
+    } else if(!sameColumn && dy < 0){
+      // === DIAGONAL UP (loops back) ===
+      // Detour out the side, up, across, down into top of target
+      const goRight = dx > 0;
+      const startSideX = goRight ? c1.r + pad : c1.l - pad;
+      const startY = c1.cy;
+      const endX = c2.cx;
+      const endY = c2.t - pad;
+      const detourX = goRight
+        ? Math.max(c1.r, c2.r) + 28
+        : Math.min(c1.l, c2.l) - 28;
+      const aboveY = endY - 18;
+
+      d = `M${startSideX},${startY} L${detourX},${startY} L${detourX},${aboveY} L${endX},${aboveY} L${endX},${endY}`;
+      labelX = detourX + (goRight ? 6 : -6);
+      labelY = (startY + aboveY) / 2;
+      labelAnchor = goRight ? 'start' : 'end';
+
     } else {
-      const x1 = c1.r;
-      const x2 = c2.l > c1.r ? c2.l : c2.r;
-      line(x1,c1.cy,x2,c2.cy,hex,'m'+a.lane,a.label);
+      // Fallback (shouldn't happen for valid arrow data)
+      d = `M${c1.cx},${c1.b + pad} L${c2.cx},${c2.t - pad}`;
+      labelX = (c1.cx + c2.cx) / 2 + 6;
+      labelY = (c1.b + c2.t) / 2;
+      labelAnchor = 'start';
     }
+
+    drawArrow(d, hex, a.lane, a.label, labelX, labelY, labelAnchor);
   });
 }
 
