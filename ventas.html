@@ -93,12 +93,18 @@ header.page p{color:var(--muted);font-size:13px;margin-top:6px;font-family:'IBM 
 .macro-step.p3:hover{background:rgba(249,115,22,.14);border-color:var(--adm)}
 .macro-step.p4{border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.07)}
 .macro-step.p4:hover{background:rgba(34,197,94,.14);border-color:var(--cli)}
+.macro-step.p5{border-color:rgba(99,102,241,.5);background:rgba(99,102,241,.07)}
+.macro-step.p5:hover{background:rgba(99,102,241,.14);border-color:var(--sis)}
+.macro-step.p6{border-color:rgba(234,179,8,.5);background:rgba(234,179,8,.07)}
+.macro-step.p6:hover{background:rgba(234,179,8,.14);border-color:var(--dep)}
 
 .macro-code{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1.5px;margin-bottom:5px}
 .macro-step.p1 .macro-code{color:var(--ven)}
 .macro-step.p2 .macro-code{color:var(--plan)}
 .macro-step.p3 .macro-code{color:var(--adm)}
 .macro-step.p4 .macro-code{color:var(--cli)}
+.macro-step.p5 .macro-code{color:var(--sis)}
+.macro-step.p6 .macro-code{color:var(--dep)}
 .macro-name{font-size:12.5px;font-weight:700;color:var(--white);line-height:1.3}
 .macro-hint{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:8px;opacity:.75}
 
@@ -121,11 +127,15 @@ header.page p{color:var(--muted);font-size:13px;margin-top:6px;font-family:'IBM 
 .pcard.p2::before{background:var(--plan)}
 .pcard.p3::before{background:var(--adm)}
 .pcard.p4::before{background:var(--cli)}
+.pcard.p5::before{background:var(--sis)}
+.pcard.p6::before{background:var(--dep)}
 .pcard:hover{border-color:var(--ven);transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
 .pcard.p1:hover{border-color:var(--ven)}
 .pcard.p2:hover{border-color:var(--plan)}
 .pcard.p3:hover{border-color:var(--adm)}
 .pcard.p4:hover{border-color:var(--cli)}
+.pcard.p5:hover{border-color:var(--sis)}
+.pcard.p6:hover{border-color:var(--dep)}
 
 .pcard-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;padding-left:8px}
 .pcard-code{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:1.5px}
@@ -133,6 +143,8 @@ header.page p{color:var(--muted);font-size:13px;margin-top:6px;font-family:'IBM 
 .pcard.p2 .pcard-code{color:var(--plan)}
 .pcard.p3 .pcard-code{color:var(--adm)}
 .pcard.p4 .pcard-code{color:var(--cli)}
+.pcard.p5 .pcard-code{color:var(--sis)}
+.pcard.p6 .pcard-code{color:var(--dep)}
 .pcard-type{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--muted);padding:1px 6px;border-radius:2px;border:1px solid var(--border);text-transform:uppercase;letter-spacing:1px}
 .pcard-title{font-size:15px;font-weight:700;color:var(--white);margin-bottom:10px;line-height:1.35;padding-left:8px}
 .pcard-desc{font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:14px;padding-left:8px;flex:1}
@@ -160,6 +172,8 @@ header.page p{color:var(--muted);font-size:13px;margin-top:6px;font-family:'IBM 
 .pcard.p2 .pcard-cta{color:var(--plan)}
 .pcard.p3 .pcard-cta{color:var(--adm)}
 .pcard.p4 .pcard-cta{color:var(--cli)}
+.pcard.p5 .pcard-cta{color:var(--sis)}
+.pcard.p6 .pcard-cta{color:var(--dep)}
 
 /* ======================================================================= */
 /* PROCESS DIAGRAM SECTION                                                 */
@@ -414,13 +428,13 @@ const PROCESSES = {
     name: 'Gestión de Pedidos de Venta y Entregas',
     shortName: 'Pedidos y Entregas',
     type: 'Principal',
-    rqRange: 'RQ-VTA-01 a 08, 10, 26',
-    rqCount: 10,
-    description: 'Ciclo completo del pedido de venta: recepción de OC, carga del PV por Planificación / Customer Service, tipos de pedido, múltiples fechas de entrega, asignación manual de stock, bloqueos con motivos, actualización de precios, cancelación de remanentes y circuito B.',
-    shortDesc: 'OC → PV → tipos · fechas múltiples · bloqueos · entregas',
-    lanes: ['cli','plan','ven','adm','dep'],
-    intro: 'Cubre desde la recepción de la OC del cliente hasta la entrega física. La carga del PV en el sistema la realiza el equipo de Planificación / Customer Service (no el equipo comercial); Ventas conserva la decisión sobre tipos de pedido, bloqueos, precios y la gestión del cliente. Incluye los controles de bloqueo por facturación y entrega, la gestión de precios ante variaciones frecuentes de resinas (hasta 4 cambios/mes), y la cancelación de remanentes con trazabilidad completa. El desarrollo más complejo del área es DEV-VTA-01 (múltiples fechas de entrega por línea).',
-    archNote: 'MÓDULOS CLAVE — <strong>sale_order_line_delivery_date</strong> + <strong>sale_delivery_split_date</strong> (OCA/sale-workflow 17.0) para partición de entregas por fecha · Extensión del módulo de bloqueo de Libus (agregar campo de motivo) · Configuración de tipos de pedido por company. <strong>Responsable de carga:</strong> equipo Planificación / Customer Service (alineado con RQ-PLA-01 del MF Planificación).',
+    rqRange: 'RQ-VTA-01 a 03, 05 a 08, 10, 30',
+    rqCount: 9,
+    description: 'Ciclo completo del pedido de venta: recepción de OC, carga del PV por Planificación / Customer Service, tipos de pedido, múltiples fechas de entrega, asignación manual de stock, bloqueos con motivos, cancelación de remanentes, circuito B y forzado de ruta. Devoluciones RMA en P-VTA-5; gestión de precios en P-VTA-6.',
+    shortDesc: 'OC → PV → bloqueos · entregas · circuito B · ruta forzada',
+    lanes: ['cli','plan','ven','adm','dep','sis'],
+    intro: 'Cubre desde la recepción de la OC del cliente hasta la entrega física. La carga del PV en el sistema la realiza el equipo de Planificación / Customer Service (no el equipo comercial); Ventas conserva la decisión sobre tipos de pedido, bloqueos y la gestión del cliente. Incluye los controles de bloqueo por facturación y entrega (ahora con motivo automático "vigencia de precios" activado por DEV-VTA-02, ver P-VTA-6), la cancelación de remanentes con trazabilidad, el circuito B enriquecido (sesión 6) y el forzado de ruta por tipo de pedido. Devoluciones RMA: ver P-VTA-5.',
+    archNote: 'MÓDULOS CLAVE — <strong>sale_order_line_delivery_date</strong> + <strong>sale_delivery_split_date</strong> (OCA/sale-workflow 17.0) para partición de entregas por fecha · Extensión del módulo de bloqueo de Libus (agregar campo de motivo + motivo automático "vigencia de precios" de DEV-VTA-02) · Configuración de tipos de pedido por company · Forzado de ruta por tipo (restricción UI o server-side). <strong>Responsable de carga:</strong> equipo Planificación / Customer Service. <strong>RMA:</strong> ver P-VTA-5.',
     steps: [
       { n: '01', label: 'OC del cliente', lane: 'cli', variant: 'cli',
         title: 'Cliente envía orden de compra',
@@ -429,7 +443,7 @@ const PROCESSES = {
       },
       { n: '02', label: 'Carga del PV', lane: 'plan', variant: 'plan',
         title: 'Carga del pedido de venta en Odoo',
-        desc: 'El equipo de <em>Planificación / Customer Service</em> (Victoria, Brian, Gastón) recibe la OC y carga el PV manualmente en Odoo. Selecciona el <em>tipo de pedido</em>: local A, local B, exportación, e-commerce, productos propios (Nonspill). Propaga el código del cliente al SKU interno mediante DEV-PLA-01.',
+        desc: 'El equipo de <em>Planificación / Customer Service</em> (Victoria, Brian, Gastón) recibe la OC y carga el PV manualmente en Odoo. Selecciona el <em>tipo de pedido</em>: local A, local B, exportación, e-commerce, productos propios (Nonspill). Propaga el código del cliente al SKU interno mediante DEV-PLA-01. El tipo condiciona moneda, facturación, documento de entrega y <em>ruta forzada</em> (RQ-VTA-30).',
         tags: ['RQ-VTA-01', 'RQ-VTA-02', 'tipo de pedido', 'rol Customer Service']
       },
       { n: '03', label: 'Fechas de entrega', lane: 'plan', variant: 'plan2',
@@ -438,27 +452,22 @@ const PROCESSES = {
         tags: ['RQ-VTA-03', 'DEV-VTA-01', 'sale_delivery_split_date (OCA)'],
         pill: { color: 'ven', text: '🔧 DEV-VTA-01 · desarrollo más complejo del área' }
       },
-      { divider: 'GESTIÓN DE PRECIOS Y BLOQUEOS' },
-      { n: '04', label: 'Precios actualizados', lane: 'adm', variant: 'adm',
-        title: 'Actualización de precios en líneas pendientes',
-        desc: 'Ante cambios de precio (frecuentes por variación de resinas, hasta 4/mes), se re-pricean las líneas no facturadas contra la nueva lista. Si no es posible: cancelar remanentes + nuevo PV.',
-        tags: ['RQ-VTA-04', 'listas de precios', 'variación resinas']
-      },
-      { n: '04b', label: 'Precio vigente', lane: 'sis', variant: 'sis',
-        title: 'Precio vigente al momento de la facturación',
-        desc: 'La facturación debe tomar el precio vigente en la lista de precios al momento de emitir la factura, no el precio cargado en el PV original si este fue modificado. Requiere mecanismo para que el sistema verifique el precio actual contra la lista activa antes de facturar.',
-        tags: ['RQ-VTA-26', 'gap', 'verificación precio vs lista activa al facturar'],
-        pill: { color: 'dep', text: '⚠ GAP · precio vigente al facturar · mecanismo de verificación pendiente' }
-      },
-      { n: '05', label: 'Bloqueo facturación', lane: 'adm', variant: 'adm2',
+      { divider: 'BLOQUEOS Y CONTROL' },
+      { n: '04', label: 'Bloqueo facturación', lane: 'adm', variant: 'adm',
         title: 'Bloqueo de facturación con motivo',
-        desc: 'Campo de bloqueo con motivo seleccionable: <em>diferencia de precio, AFIP categoría M, decisión gerencial, otro</em>. Cuando está activo, el PV no aparece en el pool de facturación.',
-        tags: ['RQ-VTA-06', 'bloqueo con motivo', 'extensión Libus']
+        desc: 'Campo de bloqueo con motivo seleccionable: <em>diferencia de precio, AFIP categoría M, decisión gerencial, vigencia de precios</em> (nuevo — activado automáticamente por DEV-VTA-02 desde P-VTA-6), <em>otro</em>. Cuando está activo, el PV no aparece en el pool de facturación.',
+        tags: ['RQ-VTA-06', 'bloqueo con motivo', 'extensión Libus', 'DEV-VTA-02 → motivo automático']
       },
-      { n: '06', label: 'Bloqueo entrega', lane: 'ven', variant: 'ven3',
+      { n: '05', label: 'Bloqueo entrega', lane: 'ven', variant: 'ven3',
         title: 'Bloqueo de entrega con motivos',
-        desc: 'Campo de bloqueo de entrega con motivo: <em>falta confirmación, precio, decisión financiera</em>. Extensión del desarrollo existente en Libus (agregar campo de motivo al bloqueo on/off).',
-        tags: ['RQ-VTA-07', 'extensión Libus', 'motivo obligatorio']
+        desc: 'Campo de bloqueo de entrega con motivo: <em>falta confirmación, precio, decisión financiera, vigencia de precios</em> (nuevo — activado automáticamente por DEV-VTA-02 desde P-VTA-6). Extensión del desarrollo existente en Libus (agregar campo de motivo al bloqueo on/off).',
+        tags: ['RQ-VTA-07', 'extensión Libus', 'motivo obligatorio', 'DEV-VTA-02 → motivo automático']
+      },
+      { n: '06', label: 'Ruta forzada', lane: 'sis', variant: 'sis',
+        title: 'Forzado de ruta de entrega por tipo de pedido',
+        desc: 'El sistema fuerza la ruta según tipo de pedido, sin permitir modificación en el wizard de entrega. Crítico para tipo B (guía de traslado, no remito). El tipo defaultea la ruta y la ruta no es editable. Requiere restricción UI o validación server-side.',
+        tags: ['RQ-VTA-30', 'gap', 'ruta forzada por tipo', 'wizard entrega'],
+        pill: { color: 'dep', text: '⚠ GAP · wizard permite cambiar ruta · requiere restricción' }
       },
       { divider: 'PREPARACIÓN Y ENTREGA', type: 'phys' },
       { n: '07', label: 'Asignación stock', lane: 'plan', variant: 'plan',
@@ -473,15 +482,15 @@ const PROCESSES = {
       },
       { divider: 'CIRCUITO ESPECIAL — Circuito B (sin factura fiscal — no confundir con Pedido tipo B multicompany de RQ-PLA-02)', type: 'end' },
       { n: '09', label: 'Circuito B', lane: 'ven', variant: 'ven3',
-        title: 'Pedido B: entrega + CMV sin factura',
-        desc: 'Tipo de pedido especial que genera entrega con asiento de CMV pero no aparece en pool de facturación. Sale con guía de traslado. Reporte de salidas B con precio de lista para control externo. <strong>No confundir</strong> con el "Pedido tipo B" del MF Planificación (RQ-PLA-02), que refiere a multicompany (facturación desde otra razón social).',
-        tags: ['RQ-VTA-10', 'guía de traslado', 'reporte salidas B', '≠ multicompany']
+        title: 'Pedido B: entrega + CMV sin factura (enriquecido sesión 6)',
+        desc: 'Tipo de pedido especial enriquecido en sesión 6: (1) <em>"Totalmente facturado"</em> por defecto → nunca aparece en pool de facturación. (2) <em>Ruta forzada</em> (no editable) con guía de traslado. (3) <em>CMV automático</em> al validar guía. (4) <em>Permisos restringidos</em>. (5) Reporte mensual de salidas B con precio de lista. Multi-company descartado para Etapa 1. <strong>No confundir</strong> con el "Pedido tipo B" del MF Planificación (RQ-PLA-02), que refiere a multicompany.',
+        tags: ['RQ-VTA-10', 'totalmente facturado', 'ruta forzada', 'CMV automático', 'permisos', '≠ multicompany']
       }
     ],
     arrows: [
       { from: 0, to: 1, lane: 'plan', label: 'OC recibida' },
       { from: 1, to: 2, lane: 'plan', label: 'partición fechas' },
-      { from: 5, to: 6, lane: 'plan', label: 'desbloqueado → preparar' }
+      { from: 4, to: 5, lane: 'plan', label: 'desbloqueado → preparar' }
     ]
   },
 
@@ -491,32 +500,27 @@ const PROCESSES = {
     name: 'Planificación de la Demanda y Producción',
     shortName: 'Demanda y MRP',
     type: 'Interfaz',
-    rqRange: 'RQ-VTA-11 a 13',
-    rqCount: 3,
-    description: 'Interfaz entre Ventas y Planificación/Producción. Los PV confirmados alimentan el MRP. Los productos propios (Nonspill, tapones) requieren planificación por proyección de demanda además de pedidos firmes.',
-    shortDesc: 'PV → MRP · precios · stock resultante',
+    rqRange: 'RQ-VTA-11, 13',
+    rqCount: 2,
+    description: 'Interfaz entre Ventas y Planificación/Producción. Los PV confirmados alimentan el MRP. Los productos propios (Nonspill, tapones) requieren planificación por proyección de demanda además de pedidos firmes. La gestión de listas de precios (ex RQ-VTA-12) se trasladó al proceso dedicado P-VTA-6.',
+    shortDesc: 'PV → MRP · stock resultante',
     lanes: ['ven','plan'],
-    intro: 'Los pedidos de venta confirmados son el input principal del MRP multinivel. La carga del PV la realiza el equipo de Planificación / Customer Service en su rol que precede al MRP. Para productos propios (Nonspill, tapones de botellón), la planificación combina pedidos firmes con proyección de demanda y stock de seguridad. La política de precios (precio por millar, escalas, listas por cliente) está pendiente de sesión de detalle.',
-    archNote: 'REFERENCIA CRUZADA — El detalle del MRP está documentado en <strong>MF Planificación v1.1</strong>. <strong>Handshake Ventas → Planificación:</strong> el OUTPUT principal de Ventas (sale.order confirmado) es el INPUT principal de Planificación (RQ-PLA-10). Las sub-líneas de DEV-VTA-01 alimentan el fechado (RQ-PLA-03). La configuración de listas de precios está pendiente de sesión con Victoria y Lisandro.',
+    intro: 'Los pedidos de venta confirmados son el input principal del MRP multinivel. La carga del PV la realiza el equipo de Planificación / Customer Service en su rol que precede al MRP. Para productos propios (Nonspill, tapones de botellón), la planificación combina pedidos firmes con proyección de demanda y stock de seguridad. La gestión de listas de precios se trasladó al proceso dedicado P-VTA-6.',
+    archNote: 'REFERENCIA CRUZADA — El detalle del MRP está documentado en <strong>MF Planificación v4.2</strong>. <strong>Handshake Ventas → Planificación:</strong> el OUTPUT principal de Ventas (sale.order confirmado) es el INPUT principal de Planificación (RQ-PLA-10). Las sub-líneas de DEV-VTA-01 alimentan el fechado (RQ-PLA-03). La configuración de listas de precios se cubre en <strong>P-VTA-6</strong>.',
     steps: [
       { n: '01', label: 'PV confirmados', lane: 'plan', variant: 'plan',
         title: 'Pedidos de venta como input del MRP',
         desc: 'Los PV confirmados (cargados por Customer Service) generan demanda en el MRP. Las fechas de entrega por sub-línea (DEV-VTA-01) alimentan la planificación con granularidad semanal. Es el handshake de Ventas con el MRP multinivel.',
         tags: ['RQ-VTA-11', 'sale.order → MRP', 'ref. RQ-PLA-10']
       },
-      { n: '02', label: 'Listas de precios', lane: 'ven', variant: 'ven2',
-        title: 'Configuración de listas de precios',
-        desc: 'Listas por cliente individual (producto propietario), genéricas (Nonspill), con escalas por cantidad. Precio por millar como UdM del producto. Las listas Argul son distintas de Libus.',
-        tags: ['RQ-VTA-12', 'precio por millar', 'pendiente sesión detalle']
-      },
-      { n: '03', label: 'Stock resultante', lane: 'plan', variant: 'plan',
+      { n: '02', label: 'Stock resultante', lane: 'plan', variant: 'plan',
         title: 'Análisis de stock resultante para distribución',
         desc: 'Planificación analiza stock resultante día a día (<em>forecasted report</em>): stock actual + entradas previstas − salidas previstas. Para tapones (+20 clientes), distribución equitativa es crítica.',
         tags: ['RQ-VTA-13', 'forecasted report', 'distribución equitativa']
       }
     ],
     arrows: [
-      { from: 0, to: 2, lane: 'plan', label: 'demanda → planificación' }
+      { from: 0, to: 1, lane: 'plan', label: 'demanda → distribución' }
     ]
   },
 
@@ -535,14 +539,15 @@ const PROCESSES = {
     archNote: 'MÓDULOS CLAVE — <strong>sale_subscription</strong> (Enterprise) o <strong>contract</strong> (OCA 17.0) para facturación recurrente · <strong>stock_request</strong> (OCA, ya en Libus) para solicitudes de envío sin factura · COT pendiente de definición con WMS/Logística.',
     steps: [
       { n: '01', label: 'Alquileres Libus', lane: 'adm', variant: 'adm',
-        title: 'Facturación recurrente por alquileres',
-        desc: 'Alquiler del depósito a Libus y servicios mensuales. Conceptos fijos (espacio/aforo), cantidades variables (horas mantenimiento moldes). Facturación mes vencido.',
-        tags: ['RQ-VTA-14', 'sale_subscription vs. contract (OCA)', 'evaluar']
+        title: 'Facturación recurrente por alquileres (Fuera de alcance Etapa 1)',
+        desc: '<strong>Diferido a Etapa 2.</strong> Alquiler del depósito a Libus y servicios mensuales. Conceptos fijos (espacio/aforo), cantidades variables (horas mantenimiento moldes). Facturación mes vencido.',
+        tags: ['RQ-VTA-14', 'FUERA DE ALCANCE', 'diferido Etapa 2'],
+        pill: { color: 'dep', text: '⏳ FUERA DE ALCANCE · diferido a Etapa 2' }
       },
       { n: '02', label: 'Servicios moldes', lane: 'ven', variant: 'ven',
         title: 'Venta de servicio de fabricación/reparación',
-        desc: 'Producto tipo servicio en Odoo. Facturación de servicios de fabricación o reparación de moldes. Anticipos configurados por término de pago. Reemplaza el código de texto libre de SAP.',
-        tags: ['RQ-VTA-15', 'producto servicio', 'anticipos']
+        desc: 'Producto tipo servicio en Odoo. Facturación de servicios de fabricación o reparación de moldes. SKU genérico con descripción editable (sesión 6). Anticipos configurados por término de pago. Reemplaza el código de texto libre de SAP.',
+        tags: ['RQ-VTA-15', 'SKU genérico', 'descripción editable', 'anticipos']
       },
       { n: '03', label: 'Venta activos', lane: 'adm', variant: 'adm2',
         title: 'Venta de activos fijos con baja contable',
@@ -550,15 +555,15 @@ const PROCESSES = {
         tags: ['RQ-VTA-16', 'activos fijos', 'ganancia/pérdida']
       },
       { n: '04', label: 'Factura anticipada', lane: 'adm', variant: 'adm',
-        title: 'Facturación anticipada (clientes nuevos)',
-        desc: 'Clientes sin crédito: proforma → factura → cobro → entrega. PV con política <em>facturar cantidad pedida</em>. Término de pago inmediato. Flujo invertido.',
-        tags: ['RQ-VTA-17', 'down payment', 'flujo invertido']
+        title: 'Facturación anticipada (clientes nuevos / prepagados)',
+        desc: 'Clientes sin crédito: proforma → factura → cobro → entrega. PV con política <em>facturar cantidad pedida</em>. Término de pago inmediato. Flujo invertido. <strong>Sesión 6:</strong> la planificación/producción solo se activa tras confirmación del pago. Pedidos prepagados excluidos del bloqueo automático por vigencia de precios (DEV-VTA-02).',
+        tags: ['RQ-VTA-17', 'down payment', 'flujo invertido', 'producción tras pago']
       },
       { divider: 'MOVIMIENTOS SIN FACTURACIÓN — muestras, préstamos, traslados', type: 'phys' },
       { n: '05', label: 'Remito sin cargo', lane: 'dep', variant: 'dep',
         title: 'Movimientos de mercadería sin facturación',
-        desc: 'Muestras, préstamos, traslados a filiales, envíos a subcontratistas. Requiere solicitud formal → aprobación → transferencia con remito oficial sin impacto contable de venta.',
-        tags: ['RQ-VTA-18', 'stock_request (OCA Libus)', 'trazabilidad']
+        desc: 'Muestras, préstamos, traslados a filiales, envíos a subcontratistas. Requiere solicitud formal → aprobación → transferencia con remito oficial sin impacto contable de venta. <strong>Sesión 6:</strong> punto de venta dedicado para remitos sin cargo.',
+        tags: ['RQ-VTA-18', 'stock_request (OCA Libus)', 'punto de venta dedicado']
       },
       { n: '06', label: 'COT entregas', lane: 'dep', variant: 'dep2',
         title: 'COT en entregas (provincia de Buenos Aires)',
@@ -598,14 +603,15 @@ const PROCESSES = {
         tags: ['RQ-VTA-21', 'partner_domain (Libus)', 'migración datos']
       },
       { n: '03', label: 'Ciclo vida producto', lane: 'ven', variant: 'ven2',
-        title: 'Ciclo de vida del producto',
-        desc: 'Estados: <em>en desarrollo → activo → obsoleto</em>. Campos condicionales según etapa. Un producto en desarrollo no debería poder venderse. Workflow que fuerce avance ordenado.',
-        tags: ['RQ-VTA-22', 'pendiente diseño Franco Nicolau', 'campo + acción']
+        title: 'Ciclo de vida del producto (Activo / Inactivo)',
+        desc: 'Estados simplificados (sesión 5): <em>activo → inactivo</em>. Un producto inactivo no puede venderse ni aparecer en catálogo comercial. Evaluar OCA product_state.',
+        tags: ['RQ-VTA-22', 'activo/inactivo', 'evaluar OCA product_state']
       },
       { n: '04', label: 'CRM', lane: 'ven', variant: 'ven',
-        title: 'CRM: prospección y seguimiento',
-        desc: 'Activar módulo CRM de Odoo: pipeline de oportunidades, seguimiento de prospectos, conversión oportunidad → presupuesto → PV. Alcance inicial básico. Hoy no existe nada en SAP.',
-        tags: ['RQ-VTA-23', 'CRM nativo', 'capacitación'],
+        title: 'CRM: prospección y seguimiento (Fuera de alcance Etapa 1)',
+        desc: '<strong>Diferido a Etapa 2.</strong> Activar módulo CRM de Odoo: pipeline de oportunidades, seguimiento de prospectos, conversión oportunidad → presupuesto → PV. Hoy no existe nada en SAP.',
+        tags: ['RQ-VTA-23', 'FUERA DE ALCANCE', 'diferido Etapa 2'],
+        pill: { color: 'dep', text: '⏳ FUERA DE ALCANCE · diferido a Etapa 2' },
         cite: '"Hoy no tenemos nada" — Lisandro Argul'
       }
     ],
@@ -652,6 +658,74 @@ const PROCESSES = {
       { from: 0, to: 1, lane: 'ven', label: 'solicitud → RMA' },
       { from: 1, to: 2, lane: 'sis', label: 'RMA → NC automática' }
     ]
+  },
+
+  /* ================= P-VTA-6 ================= */
+  p6: {
+    code: 'P-VTA-6',
+    name: 'Gestión de Precios de Venta',
+    shortName: 'Precios',
+    type: 'Operativo',
+    rqRange: 'RQ-VTA-04, 12, 26, 27, 28, 29',
+    rqCount: 6,
+    description: 'Configuración, vigencia, actualización y control de listas de precios y su impacto sobre pedidos de venta existentes. Las variaciones de resinas provocan hasta 4 cambios de precio por mes. Contiene 2 desarrollos custom (DEV-VTA-02 alertas+bloqueo, DEV-VTA-03 split de línea).',
+    shortDesc: 'Listas · vigencia · alertas · bloqueo · split línea',
+    lanes: ['adm','ven','sis','plan'],
+    intro: 'La gestión de precios en Argul es un circuito de alta complejidad: las variaciones de resinas provocan hasta 4 cambios de precio por mes, existen múltiples grupos de precios por cliente y por familia de producto, y las listas tienen vigencia temporal cuyo vencimiento debe reflejarse automáticamente en los pedidos pendientes. Este proceso cubre el ciclo completo: configuración de listas → asignación de vigencia → detección de cambio/vencimiento → alerta sobre PV afectados → bloqueo automático de entregas y facturación → resolución (split de línea o nuevo PV) → desbloqueo → facturación al precio correcto. Los bloqueos se materializan como motivo "vigencia de precios" en RQ-VTA-06 y RQ-VTA-07 de P-VTA-1.',
+    archNote: 'MÓDULOS — Evaluar OCA para listas con vigencia temporal. <strong>DEV-VTA-02</strong> (alertas + bloqueo automático por vigencia): cron periódico o trigger al modificar lista; excluye prepagados y totalmente facturados. <strong>DEV-VTA-03</strong> (split de línea por precio): acción/botón en línea de PV; complejidad media-alta. Grupos de precios confirmados (sesión 6): por cliente (distribuidores vs. finales) y por familia de producto (ej. tapones con niveles por volumen).',
+    steps: [
+      { n: '01', label: 'Listas de precios', lane: 'adm', variant: 'adm',
+        title: 'Configuración de listas de precios',
+        desc: 'Listas por cliente individual (producto propietario), genéricas (Nonspill), con escalas por cantidad. Precio por millar como UdM del producto (puede ser millar o unidad). Listas Argul distintas de Libus. Grupos de precios confirmados (sesión 6): por cliente (distribuidores vs. finales) y por familia de producto (ej. tapones con niveles por volumen). Configurar con dos decimales como máximo.',
+        tags: ['RQ-VTA-12', 'precio por millar', 'grupos por cliente y familia', 'max 2 decimales']
+      },
+      { n: '02', label: 'Vigencia temporal', lane: 'sis', variant: 'sis',
+        title: 'Vigencia temporal de listas de precios',
+        desc: 'Las listas tienen fecha de inicio y fin de vigencia. El vencimiento debe reflejarse automáticamente en los pedidos pendientes vinculados. La vigencia es el disparador principal de los controles automáticos.',
+        tags: ['RQ-VTA-12', 'vigencia', 'disparador DEV-VTA-02']
+      },
+      { n: '03', label: 'Actualizar precios', lane: 'adm', variant: 'adm',
+        title: 'Actualización de precios en líneas pendientes',
+        desc: 'Ante cambios de precio (frecuentes por variación de resinas, hasta 4/mes), se re-pricean las líneas no facturadas contra la nueva lista. Control administrativo al cargar PV: verificar coincidencia de precios OC vs. lista vigente; si no coinciden, notificar al comercial sin cargar.',
+        tags: ['RQ-VTA-04', 'variación resinas', 'verificación al cargar']
+      },
+      { divider: 'DETECCIÓN Y CONTROL AUTOMÁTICO — DEV-VTA-02' },
+      { n: '04', label: 'Alertas automáticas', lane: 'sis', variant: 'sis',
+        title: 'Alertas por modificación/vencimiento de listas',
+        desc: 'Cuando una lista se modifica o vence y existen PV pendientes vinculados, el sistema genera <em>actividades automáticas</em> sobre cada PV afectado. La alerta indica: lista modificada/vencida, PV afectados, SKUs y cantidades pendientes. Ejecución: cron periódico o trigger al modificar lista.',
+        tags: ['RQ-VTA-27', 'DEV-VTA-02', 'actividades automáticas', 'cron o trigger'],
+        pill: { color: 'ven', text: '🔧 DEV-VTA-02 · alertas + bloqueo automático por vigencia' }
+      },
+      { n: '05', label: 'Bloqueo automático', lane: 'sis', variant: 'sis',
+        title: 'Bloqueo automático por vigencia de precios',
+        desc: 'Bloqueo automático de entregas Y facturación de PV vinculados a listas modificadas o vencidas. Motivo: <em>"vigencia de precios"</em> (se refleja en RQ-VTA-06 y RQ-VTA-07 de P-VTA-1). Desbloqueo manual. <strong>Excepción:</strong> pedidos totalmente facturados o prepagados quedan excluidos.',
+        tags: ['RQ-VTA-28', 'DEV-VTA-02', 'bloqueo entregas + facturación', 'excluye prepagados'],
+        cite: '"que bloquee todo, nosotros decidimos qué hacer con cada cliente" — Lisandro Argul'
+      },
+      { divider: 'RESOLUCIÓN' },
+      { n: '06', label: 'Revisión comercial', lane: 'ven', variant: 'ven',
+        title: 'Revisión comercial del PV bloqueado',
+        desc: 'El equipo comercial revisa cada PV bloqueado y decide la acción: (a) cancelar remanentes + nuevo PV (si cliente requiere nueva OC), o (b) split de línea con precio actualizado (si acepta pedido abierto). La política varía por cliente.',
+        tags: ['RQ-VTA-04', 'decisión comercial', 'caso por caso']
+      },
+      { n: '07', label: 'Split línea precios', lane: 'plan', variant: 'plan',
+        title: 'Split de línea para actualización de precios',
+        desc: 'Acción sobre línea de PV con entregas parciales: (1) cancela remanente al precio anterior, (2) crea línea nueva en el mismo PV al precio vigente. Trazabilidad: cantidad original, entregada (precio viejo), pendiente (precio nuevo). Para clientes con pedidos abiertos sin nueva OC.',
+        tags: ['RQ-VTA-29', 'DEV-VTA-03', 'split línea', 'consistencia totales'],
+        pill: { color: 'ven', text: '🔧 DEV-VTA-03 · split de línea · complejidad media-alta' }
+      },
+      { n: '08', label: 'Precio vigente → fact.', lane: 'sis', variant: 'sis',
+        title: 'Facturación a precio de lista vigente',
+        desc: 'La facturación toma el precio vigente al momento de emitir la factura. En situaciones especiales: se bloquea la facturación (DEV-VTA-02); resuelta la situación, se factura con la lista vigente. Se complementa con DEV-VTA-02 (bloqueo) y DEV-VTA-03 (split).',
+        tags: ['RQ-VTA-26', 'gap', 'precio vigente al facturar'],
+        pill: { color: 'dep', text: '⚠ GAP · Odoo nativo factura al precio del PV · requiere mecanismo' }
+      }
+    ],
+    arrows: [
+      { from: 0, to: 1, lane: 'sis', label: 'listas → vigencia' },
+      { from: 3, to: 4, lane: 'sis', label: 'alerta → bloqueo' },
+      { from: 5, to: 6, lane: 'plan', label: 'decisión → split/nuevo PV' }
+    ]
   }
 };
 
@@ -679,7 +753,7 @@ function el(tag, attrs={}, ...children){
 /* ROUTE BAR                                                          */
 /* ================================================================= */
 
-function renderRouteBar(route){const MF_URL='https://docs.google.com/document/d/1FoDeIxU3KqMfXQDOND2S869biVWOTk1Vbnt1RCYI800/view';const bar=document.getElementById('routebar');bar.innerHTML='';const left=el('div',{class:'routebar-left'});left.appendChild(el('span',{html:'🛒 VENTAS'}));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));const center=el('div',{class:'routebar-center'});center.appendChild(el('a',{href:'index.html'},'⬡ Mapa de Procesos (Nivel 1)'));if(route!=='overview'){center.appendChild(el('a',{href:'#/overview'},'📋 Procesos de Negocio (Nivel 2)'));}center.appendChild(el('a',{href:MF_URL,target:'_blank',rel:'noopener noreferrer'},'📄 Ver Modelo Funcional v3.2'));if(route==='overview'){left.appendChild(el('span',{class:'crumb-active'},'PROCESOS DE NEGOCIO'));}else{const proc=PROCESSES[route];left.appendChild(el('span',{},'Procesos de negocio'));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));left.appendChild(el('span',{class:'crumb-active'},proc.code+' · '+proc.shortName));}bar.appendChild(left);bar.appendChild(center);bar.appendChild(el('div',{class:'routebar-right'},'v3.2 · 20-may-2026'));}
+function renderRouteBar(route){const MF_URL='https://docs.google.com/document/d/1FoDeIxU3KqMfXQDOND2S869biVWOTk1Vbnt1RCYI800/view';const bar=document.getElementById('routebar');bar.innerHTML='';const left=el('div',{class:'routebar-left'});left.appendChild(el('span',{html:'🛒 VENTAS'}));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));const center=el('div',{class:'routebar-center'});center.appendChild(el('a',{href:'index.html'},'⬡ Mapa de Procesos (Nivel 1)'));if(route!=='overview'){center.appendChild(el('a',{href:'#/overview'},'📋 Procesos de Negocio (Nivel 2)'));}center.appendChild(el('a',{href:MF_URL,target:'_blank',rel:'noopener noreferrer'},'📄 Ver Modelo Funcional v3.3'));if(route==='overview'){left.appendChild(el('span',{class:'crumb-active'},'PROCESOS DE NEGOCIO'));}else{const proc=PROCESSES[route];left.appendChild(el('span',{},'Procesos de negocio'));left.appendChild(el('span',{class:'crumb-sep',html:'/'}));left.appendChild(el('span',{class:'crumb-active'},proc.code+' · '+proc.shortName));}bar.appendChild(left);bar.appendChild(center);bar.appendChild(el('div',{class:'routebar-right'},'v3.3 · 02-jun-2026'));}
 
 /* ================================================================= */
 /* OVERVIEW VIEW                                                      */
@@ -691,11 +765,11 @@ function renderOverview(){
 
   const header = el('header',{class:'page'});
   header.appendChild(el('div',{class:'badge'},'Odoo 17 Enterprise · Ventas · Argul y Compañía S.A.'));
-  header.appendChild(el('span',{class:'version-badge'},'Procesos de Negocio · 5 procesos'));
+  header.appendChild(el('span',{class:'version-badge'},'Procesos de Negocio · 6 procesos'));
   const h1 = el('h1');
   h1.innerHTML = 'Procesos de Negocio de <span>Ventas</span>';
   header.appendChild(h1);
-  header.appendChild(el('p',{},'Plataforma de navegación · 5 flujos de procesos · 25 requerimientos · 1 desarrollo (DEV-VTA-01) · 2 módulos OCA'));
+  header.appendChild(el('p',{},'Plataforma de navegación · 6 flujos de procesos · 29 requerimientos · 3 desarrollos (DEV-VTA-01/02/03) · 2 módulos OCA'));
   app.appendChild(header);
 
   const legend = el('div',{class:'legend'});
@@ -709,7 +783,7 @@ function renderOverview(){
 
   app.appendChild(el('div',{
     class:'intro-note',
-    html:'<strong>⬡ ORIENTACIÓN —</strong> Esta plataforma muestra los 5 procesos del área de Ventas. El proceso principal (<strong>P-VTA-1</strong>) cubre el ciclo completo del pedido; el proceso de interfaz (<strong>P-VTA-2</strong>) conecta con Planificación/MRP; las ventas especiales (<strong>P-VTA-3</strong>) cubren circuitos atípicos; la gestión comercial (<strong>P-VTA-4</strong>) abarca maestros y CRM; y las devoluciones (<strong>P-VTA-5</strong>) gestionan RMA con OCA/rma. Hacé click en cualquier tarjeta para ver el flujo detallado.'
+    html:'<strong>⬡ ORIENTACIÓN —</strong> Esta plataforma muestra los 6 procesos del área de Ventas. El proceso principal (<strong>P-VTA-1</strong>) cubre el ciclo completo del pedido incluyendo RMA; la gestión de precios (<strong>P-VTA-6</strong>) controla vigencia, alertas y bloqueos automáticos; el proceso de interfaz (<strong>P-VTA-2</strong>) conecta con Planificación/MRP; las ventas especiales (<strong>P-VTA-3</strong>) cubren circuitos atípicos; la gestión comercial (<strong>P-VTA-4</strong>) abarca maestros y equipo de ventas; y las devoluciones (<strong>P-VTA-5</strong>) detallan el flujo RMA con OCA/rma. Hacé click en cualquier tarjeta para ver el flujo detallado.'
   }));
 
   app.appendChild(el('div',{
@@ -736,18 +810,22 @@ function renderOverview(){
 
   macro.appendChild(macroStep('p1'));
   macro.appendChild(macroArrow());
+  macro.appendChild(macroStep('p6'));
+  macro.appendChild(macroArrow());
   macro.appendChild(macroStep('p2'));
   macro.appendChild(macroArrow());
   macro.appendChild(macroStep('p3'));
   macro.appendChild(macroArrow());
   macro.appendChild(macroStep('p4'));
+  macro.appendChild(macroArrow());
+  macro.appendChild(macroStep('p5'));
   overviewWrap.appendChild(macro);
 
   overviewWrap.appendChild(el('div',{class:'section-title'},'Procesos · click para navegar al diagrama'));
 
   const grid = el('div',{class:'pgrid'});
 
-  ['p1','p2','p3','p4','p5'].forEach(pid => {
+  ['p1','p6','p2','p3','p4','p5'].forEach(pid => {
     const p = PROCESSES[pid];
     const card = el('a',{class:`pcard ${pid}`, href:`#/${pid}`});
 
@@ -1257,7 +1335,7 @@ const FT = { analytics:false, presentation:false, context:false, minimap:false, 
 const FL = { dev:false, oca:false, critical:false, ven:false, adm:false, dep:false };
 let _zoom = 1;
 let _presIdx = 0;
-const PRES_ORDER = ['p1','p2','p3','p4','p5'];
+const PRES_ORDER = ['p1','p6','p2','p3','p4','p5'];
 const HEAT = { p1:5, p2:2, p3:3, p4:1, p5:3 };
 
 function collapseBar(){
